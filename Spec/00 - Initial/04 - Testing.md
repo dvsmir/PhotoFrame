@@ -156,7 +156,14 @@ write the answer back into [`01 - Protocol.md`](01%20-%20Protocol.md) §9 or
    orders it by capture date, not receive date.
 5. **Fit vs crop.** Send the same photo with `scale = 1` and `scale = 2`; confirm which
    is which visually.
-6. **Permission revocation.** Revoke photo access on the frame and confirm the client
+6. **Does the frame serve while asleep?** Observed 2026-09-21: with the frame asleep, it
+   neither answered mDNS nor appeared on the LAN. Confirm whether a sleeping frame stops
+   advertising, stops accepting TCP, or both — and whether anything wakes it. This decides
+   whether an overnight send queue simply retries until morning (D7 handles that) or whether
+   the app should say "the frame is asleep" rather than "the frame is unreachable", which
+   are very different messages to the user. Until this is answered, treat *every* absence as
+   retryable rather than terminal.
+7. **Permission revocation.** Revoke photo access on the frame and confirm the client
    gets error 1 or 5 rather than hanging.
 
 ## 7. Android instrumented tests
