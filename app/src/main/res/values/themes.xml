@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+      Only styles the window before Compose draws; Compose supplies the real theme.
+      DeviceDefault.DayNight follows the system light/dark setting, so there is no flash of
+      the wrong background on launch.
+    -->
+    <style name="Theme.FrameAlt" parent="android:Theme.DeviceDefault.DayNight">
+        <item name="android:windowActionBar">false</item>
+        <item name="android:windowNoTitle">true</item>
+    </style>
+</resources>

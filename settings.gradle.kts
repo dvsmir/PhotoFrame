@@ -1,5 +1,12 @@
 pluginManagement {
     repositories {
+        google {
+            content {
+                includeGroupByRegex("com\\.android.*")
+                includeGroupByRegex("com\\.google.*")
+                includeGroupByRegex("androidx.*")
+            }
+        }
         gradlePluginPortal()
         mavenCentral()
     }
@@ -8,6 +15,13 @@ pluginManagement {
 dependencyResolutionManagement {
     repositoriesMode = RepositoriesMode.FAIL_ON_PROJECT_REPOS
     repositories {
+        google {
+            content {
+                includeGroupByRegex("com\\.android.*")
+                includeGroupByRegex("com\\.google.*")
+                includeGroupByRegex("androidx.*")
+            }
+        }
         mavenCentral()
     }
 }
@@ -18,6 +32,8 @@ rootProject.name = "FrameAlt"
 // emulator and no frame. See Spec/00 - Initial/02 - Architecture.md §1.
 include(":protocol")
 
-// Desktop CLI over the same library -- validates the protocol against real hardware
+// Desktop CLI over the same library — validates the protocol against real hardware
 // without involving Android at all.
 include(":framectl")
+
+include(":app")

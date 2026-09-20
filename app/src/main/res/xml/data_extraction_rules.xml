@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Nothing leaves the device.
+
+  The identity key IS the pairing: restoring it onto a second device silently clones a
+  credential that can send to the frame. Cloud backup and device-to-device transfer are both
+  refused outright rather than filtered, because a partial rule is easy to get wrong.
+  See Spec/00 - Initial/02 - Architecture.md §8.6.
+-->
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="root" />
+        <exclude domain="file" />
+        <exclude domain="database" />
+        <exclude domain="sharedpref" />
+        <exclude domain="external" />
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="root" />
+        <exclude domain="file" />
+        <exclude domain="database" />
+        <exclude domain="sharedpref" />
+        <exclude domain="external" />
+    </device-transfer>
+</data-extraction-rules>
