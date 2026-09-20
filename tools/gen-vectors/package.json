@@ -1,0 +1,8 @@
+{
+  "name": "framealt-gen-vectors",
+  "private": true,
+  "type": "module",
+  "description": "Generates crypto test vectors for the protocol module from an independent NaCl implementation.",
+  "scripts": { "gen": "node generate.mjs" },
+  "dependencies": { "tweetnacl": "^1.0.3" }
+}
