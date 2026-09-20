@@ -5,7 +5,6 @@ network — no account, no cloud, no subscription limits.
 
 Reference implementation: [`yasoob/frameo-client`](https://github.com/yasoob/frameo-client)
 (Go desktop app — read it, do not vendor it).
-
 ## Documents
 
 | # | Document | Read it when |
