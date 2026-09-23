@@ -1,6 +1,7 @@
 package app.framealt
 
 import android.app.Application
+import android.content.pm.ApplicationInfo
 import app.framealt.data.FrameStore
 import app.framealt.data.IdentityStore
 import app.framealt.data.Settings
@@ -29,7 +30,9 @@ class FrameAltApp : Application() {
  */
 class AppContainer(application: Application) {
 
-    val eventLog = EventLog()
+    val eventLog = EventLog(
+        mirrorToLogcat = application.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0,
+    )
 
     val identityStore = IdentityStore(application)
 

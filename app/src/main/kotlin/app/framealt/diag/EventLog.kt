@@ -1,5 +1,6 @@
 package app.framealt.diag
 
+import android.util.Log
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import java.time.Instant
@@ -15,8 +16,14 @@ import java.time.format.DateTimeFormatter
  *
  * Nothing secret goes in here: no key material, no friend codes, no photo content. Peer IDs
  * are redacted to their first eight hex characters by [redact].
+ *
+ * With [mirrorToLogcat] on (debug builds only) every event is also written to logcat under
+ * `FrameAlt/<tag>`, so a device session can be followed from `adb logcat`.
  */
-class EventLog(private val capacity: Int = 200) {
+class EventLog(
+    private val capacity: Int = 200,
+    private val mirrorToLogcat: Boolean = false,
+) {
 
     enum class Level { DEBUG, INFO, WARN, ERROR }
 
@@ -45,6 +52,15 @@ class EventLog(private val capacity: Int = 200) {
         if (buffer.size >= capacity) buffer.removeFirst()
         buffer.addLast(Event(System.currentTimeMillis(), level, tag, message))
         _events.value = buffer.toList()
+        if (mirrorToLogcat) {
+            val priority = when (level) {
+                Level.DEBUG -> Log.DEBUG
+                Level.INFO -> Log.INFO
+                Level.WARN -> Log.WARN
+                Level.ERROR -> Log.ERROR
+            }
+            Log.println(priority, "FrameAlt/$tag", message)
+        }
     }
 
     @Synchronized

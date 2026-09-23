@@ -71,6 +71,14 @@ this time, so the firewall problem noted in `framectl`'s `Probe` is not constant
 On 2026-09-23 the frame was at the same `192.168.2.22:36916`. Whether the frame
 rebooted in between is unknown, so this does not show the port is stable.
 
+**Observed with Android `NsdManager` (2026-09-23, Pixel 6a, Android 17).** Discovery
+found the frame about 0.2 s after browsing started and resolved the same
+`192.168.2.22:36916`. While resolving, the platform's `NsdService` logged
+`IllegalArgumentException: Key cannot be empty` from `NsdServiceInfo.setAttribute`,
+which means the frame's TXT record contains an entry with an empty key. The error stays
+inside `system_server`: the resolve still succeeds and the app is not affected. Do not
+depend on TXT attributes. Nothing in this protocol needs them.
+
 ## 3. MDG transport
 
 ### 3.1 Constants
@@ -314,6 +322,11 @@ from the frame's "Add friend" screen succeeded on the first attempt. The frame's
 matched `expected` byte for byte, so §4.2 is correct on hardware as well as against the
 reference vectors. After that, a separate process reconnected from the persisted pairing
 with no new friend code.
+
+Later the same day, the same code also paired the Android app, which uses a different
+client identity from `framectl`. A friend code is therefore **not single-use**: one
+code accepted more than one pairing. How long a code stays valid, and what makes the frame
+issue a new one, is unobserved.
 
 ### 4.4 Test vectors
 

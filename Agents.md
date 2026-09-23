@@ -71,24 +71,38 @@ implementation this port is based on. It ships **no LICENSE file**, so:
 |---|---|
 | 0 — Foundations (crypto + vectors) | **done** — external NaCl/X25519/Ed25519 vectors + all 20 PACE vectors |
 | 1 — Transport & mock frame | **done** — 54 tests green |
-| 2 — Pairing on a real frame | **code complete, unverified.** Builds and passes tests; never run against a frame or a phone. |
+| 2 — Pairing on a real frame | **done** — gate passed 2026-09-23 on a Pixel 6a (Android 17): mDNS discovery, pairing, real frame details, reconnect after force-stop |
 | 3–6 | not started |
 
-### Phase 2 — what is left to verify
+### Phase 2 — how it was verified
 
-Nothing has touched real hardware yet. As of 2026-09-21 the frame was asleep and no phone
-was attached, so all of this is outstanding:
+On 2026-09-23 the frame was awake, and `framectl` (desktop) and the app (Pixel 6a,
+Android 17) each passed:
 
-1. Install on a Pixel and confirm the app launches.
-2. `NsdManager` actually finds the frame. On 2026-09-22 (frame awake) `framectl discover`
-   and `probe` both found it from the desktop, and it answered `TELL` with `WELC`. So the
-   frame side of discovery works; Android's side is still unproven.
-3. Pairing with a real friend code succeeds.
-4. Connection details show the frame's **real** name, placement, resolution and protocol
-   version.
-5. Kill and reopen: reconnects from the stored pairing with no re-pair.
+1. The app installs and launches.
+2. `NsdManager` finds the frame with nothing cached, in about 0.2 s.
+3. Pairing with a real friend code succeeds. The frame's issuer is in `issuers.json`.
+4. Connection details show the real name, placement, 800 × 1280 and protocol 18.
+5. After a force-stop, the app reconnects from the stored pairing without pairing again.
 
-If the handshake fails, the likely causes in order are: a stale issuer list (the frame's
+Not yet exercised: rediscovery after the stored address goes stale, and anything with the
+frame asleep. What was learned is recorded in `01 - Protocol.md` (§2, §3.3, §3.5, §4.3,
+kind 2).
+
+**Driving the phone from here.** Debug builds mirror the Diagnostics log to logcat
+under `FrameAlt/<tag>`. The debug package is `app.framealt.debug`.
+
+```powershell
+adb install -r app\build\outputs\apk\debug\app-debug.apk
+adb shell am start -n app.framealt.debug/app.framealt.ui.MainActivity
+adb logcat -s "FrameAlt/session" "FrameAlt/discovery" "FrameAlt/network"
+```
+
+Screenshots: use `adb exec-out screencap -p > s.png` from the Bash tool. Redirection in
+PowerShell 5.1 corrupts binary output. To type a friend code, pipe the `input` commands into
+`adb shell` over stdin, so the code does not show up in the device's `adbd` log.
+
+If a handshake fails, the likely causes in order are: a stale issuer list (the frame's
 certificate issuer is not in `issuers.json`), the endpoint being wrong, or the frame not
 serving while asleep. The Diagnostics screen names the stage that failed.
 
