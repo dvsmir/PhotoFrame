@@ -74,6 +74,19 @@ stale. Diagnostics should name the handshake stage that failed.
 including the 50-photo batch, screen lock, Wi-Fi drop/resume, and force-stop/resume.
 Answer §6 question 1 (does the frame de-duplicate?) and record it.
 
+**Gate outcome (2026-09-23): passed**, with the scope narrowed by decision:
+
+- **HEIC and Motion Photo are out of scope for v1.** Test 13 covers JPEG (including EXIF
+  rotation), PNG with transparency, portrait and panorama. HEIC may well work, since
+  `ImageDecoder` reads it natively, but it is neither tested nor promised. The same goes
+  for Motion Photos (sent as their still image, if at all).
+- **Test 11 (unplug the frame mid-send) was not run**, judged too rough an edge case to be
+  worth the setup. The expected behaviour, traced from the code, is recorded in
+  [`04 - Testing.md`](04%20-%20Testing.md) §8.1 in its place.
+- Crop (12) and portrait and panorama (13) were confirmed by eye on the frame.
+- §6 question 1 (de-duplication) is still open; it does not block the gate.
+
+
 ## Phase 4 — Share sheet
 
 **Build**
@@ -165,6 +178,10 @@ Ordered by expected value.
 6. **Remote sending** — the SecureDeviceGrid relay. Large, and the reason D1 exists.
    Only worth it if a frame ends up living somewhere other than home.
 7. **Quick Settings tile / home-screen widget** — "send last photo to the frame".
+8. **HEIC and Motion Photo, verified.** Out of scope for v1 (decided 2026-09-23). Test a
+   Pixel HEIC and a Motion Photo end to end, and decide whether a Motion Photo should send
+   its still image or be refused.
+
 
 ## 4. Working agreements
 

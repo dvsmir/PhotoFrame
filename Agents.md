@@ -72,7 +72,7 @@ implementation this port is based on. It ships **no LICENSE file**, so:
 | 0 — Foundations (crypto + vectors) | **done** — external NaCl/X25519/Ed25519 vectors + all 20 PACE vectors |
 | 1 — Transport & mock frame | **done** — 54 tests green |
 | 2 — Pairing on a real frame | **done** — gate passed 2026-09-23 on a Pixel 6a (Android 17): mDNS discovery, pairing, real frame details, reconnect after force-stop |
-| 3 — Sending | **built, gate nearly passed.** Picker → Review & Send → Room queue → WorkManager drain. Manual tests 5–10 and 14 pass on the Pixel 6a (results in `04 - Testing.md` §8.1). Open: 11 (unplug the frame), HEIC and Motion Photo in 13, and looking at the frame for 12/13. `.\gradlew :app:testDebugUnitTest`: 22 JVM tests. Debug builds can drive the send flow over adb: `DebugPickActivity`, see its KDoc |
+| 3 — Sending | **done** — gate passed 2026-09-23 on the Pixel 6a, scope narrowed by decision (`05 - Plan.md`, Phase 3 gate outcome): tests 5–10, 12, 13 and 14 pass, test 11 was not run and its expected behaviour is traced in `04 - Testing.md` §8.1, and HEIC and Motion Photo are out of scope for v1. `.\gradlew :app:testDebugUnitTest`: 27 JVM tests. Debug builds can drive the send flow over adb: `DebugPickActivity`, see its KDoc |
 | 4 — Share sheet | **done** — gate passed 2026-09-23: Google Photos → share 20 → FrameAlt → Send → back in Google Photos, 20/20 arrived, with FrameAlt running and again force-stopped (`04 - Testing.md` §8.2). Not yet run on the device: a mixed photo+PDF share (unit-tested) and sharing before pairing |
 | 5–6 | not started |
 

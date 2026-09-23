@@ -264,8 +264,8 @@ Notes:
 - Decoding targets **sRGB**. The WebP encoder drops colour profiles, so a Display P3
   photo would otherwise look washed out on the frame.
 - `ImageDecoder` (API 28+) applies EXIF orientation during decode; do not rotate again.
-- **HEIC/HEIF decodes natively**, which is a real advantage over the reference client's
-  browser path — Pixel photos need no conversion dance.
+- **HEIC/HEIF decodes natively** in `ImageDecoder`, so Pixel photos should need no
+  conversion. Not verified: HEIC and Motion Photo are out of scope for v1 (Plan §3 item 8).
 - Ultra HDR JPEG gain maps and Motion Photo video tracks are dropped. The frame is an
   SDR still display; this is correct, not a regression.
 - If the frame's panel size is not yet known (never connected), fall back to

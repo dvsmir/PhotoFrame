@@ -206,7 +206,8 @@ version.
 11. Unplug the frame mid-send → the queue reports the frame unreachable and retries once
     it is back.
 12. Send with *Show the whole photo* off → confirm the crop.
-13. Send a portrait photo, a panorama, a HEIC, and a Motion Photo.
+13. Send a portrait photo and a panorama. (HEIC and Motion Photo: out of scope for v1, see
+    Plan §3 item 8.)
 14. Re-send a photo already sent → duplicate badge appears; sending anyway behaves as
     §6 question 1 determined.
 
@@ -243,9 +244,9 @@ correctly needs a look at the frame, and is marked as such.
 | 8 | ✅ | Wi-Fi off after 3 sent: the photo in flight got `SocketException`, went back to `PREPARED` and was charged 1 attempt. Wi-Fi back on → the queue restarted within 0.5 s and sent the remaining 9. **Bug found and fixed:** Home kept saying "Ready" and "waiting to go … Send now" with Wi-Fi off; it now follows Wi-Fi. Duplicates on the frame: not yet checked by eye. |
 | 9 | ✅ with a caveat | Force-stopped after 4 sent. The process restarted by itself about 2 s later (cause not identified) and sent the remaining 8 in the background, with no foreground service (`ForegroundServiceStartNotAllowedException`, handled). So "remaining photos complete" holds, but "resumes on reopen" was not exercised on its own. |
 | 10 | ✅ | Airplane mode on for 3 min 27 s after 3 sent; shortened from 10 min by agreement. Home showed "No Wi-Fi" and "9 photos waiting for Wi-Fi at home." Wi-Fi reconnected 3 s after airplane mode ended, and the queue sent the remaining 9. |
-| 11 | ⏳ | Needs the frame physically unplugged. |
-| 12 | ✅ sent, ⏳ look | Crop card (yellow border, LEFT/RIGHT EDGE labels) sent with *Show the whole photo* off; the frame should cut the edges. Check on the frame. |
-| 13 | partly | Portrait 3000 × 4000 and a 12000 × 2000 panorama both prepared and arrived. Earlier: a JPEG with EXIF orientation 6 and a transparent PNG. HEIC and a Motion Photo not yet tried; that needs real camera photos. Orientation and panorama fit need a look at the frame. |
+| 11 | not run (by decision) | Judged too rough an edge case to be worth the setup. **Expected behaviour, traced from the code:** a frame that loses power sends no TCP reset, so the photo in flight fails on a write error or, if all its data was sent, on the 120 s receipt timeout. It is charged 1 attempt and put back in line. Reconnects then fail (connect timeout, then rediscovery finds nothing) without charging any photo, and WorkManager backs off from 30 s, doubling. Home shows "N photos waiting to go to <frame> · Send now", with no error. **Rough edge:** nothing notices the frame coming back, as there is no signal like the Wi-Fi callback. The queue resumes at the next backoff retry, which after a long outage can be many minutes away (WorkManager caps it at 5 h), or at once on *Send now* or on opening the app. If the power went out after the last chunk but before the receipt, the photo may arrive twice (§6 question 1). |
+| 12 | ✅ | Crop card sent with *Show the whole photo* off. The owner confirmed on the frame that it was cropped to fill the screen. |
+| 13 | ✅ (narrowed) | Portrait 3000 × 4000 and a 12000 × 2000 panorama arrived and were confirmed on the frame; earlier, a JPEG with EXIF orientation 6 and a transparent PNG. **HEIC and Motion Photo are out of scope for v1** (Plan, Phase 3 gate outcome). |
 | 14 | ✅ badge | Reopening a folder already sent shows "Already sent" on those tiles and "2 of these were sent before." The pipeline is deterministic: the same source gives the same content ID. What the frame does on a re-send is still §6 question 1. |
 
 ### 8.2 Results — Phase 4 share sheet, 2026-09-23
