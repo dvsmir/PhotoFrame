@@ -5,6 +5,7 @@ import android.graphics.BitmapFactory
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.framealt.AppContainer
+import app.framealt.gallery.MediaFilter
 import app.framealt.protocol.client.MediaItem
 import app.framealt.protocol.client.MediaType
 import app.framealt.ui.describeFailure
@@ -14,6 +15,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -68,7 +70,10 @@ class PhotoViewModel(private val container: AppContainer, startId: Long) : ViewM
 
     init {
         viewModelScope.launch {
-            container.gallery.items.collect { items ->
+            // Swipes stay inside whatever the grid was filtered to.
+            combine(container.gallery.items, container.gallery.filter) { items, filter ->
+                if (filter == MediaFilter.ALL) items else items.filter(filter::matches)
+            }.collect { items ->
                 _state.update { it.copy(items = items, gone = items.isEmpty()) }
             }
         }

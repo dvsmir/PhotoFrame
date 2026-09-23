@@ -25,6 +25,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
@@ -38,6 +39,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -65,6 +67,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import app.framealt.gallery.MediaFilter
 import app.framealt.protocol.client.MediaItem
 import app.framealt.protocol.client.MediaType
 
@@ -79,6 +82,7 @@ class GalleryActions(
     val onStartSelection: (Long) -> Unit,
     val onClearSelection: () -> Unit,
     val onSelectSentFromThisPhone: () -> Unit,
+    val onFilter: (MediaFilter) -> Unit,
     val onAskDelete: () -> Unit,
     val onDismissDelete: () -> Unit,
     val onConfirmDelete: () -> Unit,
@@ -156,18 +160,36 @@ private fun NormalBar(state: GalleryState, actions: GalleryActions) {
             IconButton(onClick = actions.onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back") }
         },
         actions = {
-            if (state.access == GalleryAccess.READY && state.canManage) {
+            if (state.access == GalleryAccess.READY) {
                 IconButton(onClick = { menu = true }) { Icon(Icons.Default.MoreVert, contentDescription = "More") }
                 DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
-                    DropdownMenuItem(
-                        text = { Text("Select photos sent from this phone") },
-                        onClick = {
-                            menu = false
-                            actions.onSelectSentFromThisPhone()
-                        },
-                    )
+                    FilterItem("Show all", MediaFilter.ALL, state.filter) { menu = false; actions.onFilter(it) }
+                    FilterItem("Photos only", MediaFilter.PHOTOS, state.filter) { menu = false; actions.onFilter(it) }
+                    FilterItem("Videos only", MediaFilter.VIDEOS, state.filter) { menu = false; actions.onFilter(it) }
+                    if (state.canManage) {
+                        HorizontalDivider()
+                        DropdownMenuItem(
+                            text = { Text("Select photos sent from this phone") },
+                            onClick = {
+                                menu = false
+                                actions.onSelectSentFromThisPhone()
+                            },
+                        )
+                    }
                 }
             }
+        },
+    )
+}
+
+/** One filter choice; the active one carries a check mark. */
+@Composable
+private fun FilterItem(label: String, filter: MediaFilter, current: MediaFilter, onPick: (MediaFilter) -> Unit) {
+    DropdownMenuItem(
+        text = { Text(label) },
+        onClick = { onPick(filter) },
+        leadingIcon = {
+            if (filter == current) Icon(Icons.Default.Check, contentDescription = "Selected") else Spacer(Modifier.size(24.dp))
         },
     )
 }
@@ -206,7 +228,7 @@ private fun Grid(state: GalleryState, actions: GalleryActions) {
             modifier = Modifier.fillMaxSize(),
         ) {
             item(span = { GridItemSpan(maxLineSpan) }) { Header(state, actions) }
-            items(state.items, key = { it.id }) { item ->
+            items(state.shown, key = { it.id }) { item ->
                 Tile(item, state.thumbnails[item.id], selected = item.id in state.selection, state.selecting, actions)
             }
         }
@@ -227,6 +249,16 @@ private fun Header(state: GalleryState, actions: GalleryActions) {
             ).joinToString(" · "),
             style = MaterialTheme.typography.titleMedium,
         )
+        if (state.filter != MediaFilter.ALL) {
+            val what = if (state.filter == MediaFilter.VIDEOS) "video" else "photo"
+            val count = state.shown.size
+            Text(
+                if (count == 0) "No ${what}s on the frame." else "Showing $count $what${if (count == 1) "" else "s"} of ${state.items.size} items.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            TextButton(onClick = { actions.onFilter(MediaFilter.ALL) }) { Text("Show all") }
+        }
         if (!state.canManage) {
             Spacer(Modifier.height(4.dp))
             Text(

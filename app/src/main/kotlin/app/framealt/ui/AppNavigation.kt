@@ -145,6 +145,7 @@ fun AppNavigation(container: AppContainer, reviewRequest: Int = 0, modifier: Mod
                     onStartSelection = model::startSelection,
                     onClearSelection = model::clearSelection,
                     onSelectSentFromThisPhone = model::selectSentFromThisPhone,
+                    onFilter = model::setFilter,
                     onAskDelete = model::askDelete,
                     onDismissDelete = model::dismissDelete,
                     onConfirmDelete = model::confirmDelete,

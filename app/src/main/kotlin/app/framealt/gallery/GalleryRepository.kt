@@ -11,6 +11,7 @@ import app.framealt.protocol.client.FrameException
 import app.framealt.protocol.client.FrameInfo
 import app.framealt.protocol.client.MediaDownload
 import app.framealt.protocol.client.MediaItem
+import app.framealt.protocol.client.MediaType
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -32,6 +33,20 @@ private const val THUMBNAIL_CACHE_BYTES = 64 * 1024 * 1024
 private const val ACCESS_WAIT_MILLIS = 5L * 60 * 1000
 private const val ACCESS_POLL_MILLIS = 2_000L
 
+/** Which items the gallery shows. Kept with the data so the preview swipes within it too. */
+enum class MediaFilter {
+    ALL,
+    PHOTOS,
+    VIDEOS,
+    ;
+
+    fun matches(item: MediaItem): Boolean = when (this) {
+        ALL -> true
+        PHOTOS -> item.type == MediaType.PHOTO
+        VIDEOS -> item.type == MediaType.VIDEO
+    }
+}
+
 /**
  * What is on the frame, and everything the gallery does to it.
  *
@@ -50,6 +65,13 @@ class GalleryRepository(
 
     /** Newest first by the time the frame received each item. */
     val items: StateFlow<List<MediaItem>> = _items.asStateFlow()
+
+    private val _filter = MutableStateFlow(MediaFilter.ALL)
+    val filter: StateFlow<MediaFilter> = _filter.asStateFlow()
+
+    fun setFilter(value: MediaFilter) {
+        _filter.value = value
+    }
 
     private val cache = object : LruCache<Long, Bitmap>(THUMBNAIL_CACHE_BYTES) {
         override fun sizeOf(key: Long, value: Bitmap): Int = value.allocationByteCount

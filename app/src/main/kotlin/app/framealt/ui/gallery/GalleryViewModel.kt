@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.framealt.AppContainer
 import app.framealt.gallery.GalleryRepository
+import app.framealt.gallery.MediaFilter
 import app.framealt.protocol.client.FrameInfo
 import app.framealt.protocol.client.MediaItem
 import app.framealt.ui.describeFailure
@@ -35,7 +36,11 @@ data class GalleryState(
     val message: String? = null,
     /** Why the gallery could not load, in UX §7 words. */
     val failure: String? = null,
+    val filter: MediaFilter = MediaFilter.ALL,
 ) {
+    /** What the grid shows: [items] through [filter]. */
+    val shown: List<MediaItem> get() = if (filter == MediaFilter.ALL) items else items.filter(filter::matches)
+
     val selecting: Boolean get() = selection.isNotEmpty()
 }
 
@@ -51,6 +56,10 @@ class GalleryViewModel(private val container: AppContainer) : ViewModel() {
 
     init {
         viewModelScope.launch { repository.items.collect { items -> _state.update { it.copy(items = items) } } }
+        viewModelScope.launch {
+            // A selection made under one filter must not act on items the next one hides.
+            repository.filter.collect { f -> _state.update { it.copy(filter = f, selection = emptySet()) } }
+        }
         viewModelScope.launch { repository.thumbnails.collect { t -> _state.update { it.copy(thumbnails = t) } } }
         viewModelScope.launch {
             container.frameStore.frame.collect { frame ->
@@ -122,6 +131,8 @@ class GalleryViewModel(private val container: AppContainer) : ViewModel() {
         _state.update { it.copy(access = GalleryAccess.NEEDS_ACCESS) }
     }
 
+    fun setFilter(filter: MediaFilter) = repository.setFilter(filter)
+
     fun requestThumbnail(id: Long) = repository.requestThumbnail(id)
 
     // --- selection --------------------------------------------------------------------
@@ -144,7 +155,7 @@ class GalleryViewModel(private val container: AppContainer) : ViewModel() {
         viewModelScope.launch {
             val frame = container.frameStore.current() ?: return@launch
             val mine = repository.sentFromThisPhone(frame.peerId)
-            val onFrame = _state.value.items.map { it.id }.filter { it in mine }.toSet()
+            val onFrame = _state.value.shown.map { it.id }.filter { it in mine }.toSet()
             container.eventLog.info(TAG, "this phone sent ${mine.size} item(s); ${onFrame.size} still on the frame")
             _state.update {
                 it.copy(
