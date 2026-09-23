@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">FrameAlt</string>
+    <string name="app_name">Photo Frame</string>
     <!-- The name under the icon in the share sheet. -->
-    <string name="share_label">FrameAlt</string>
+    <string name="share_label">Photo Frame</string>
 </resources>

@@ -116,7 +116,7 @@ fun GalleryScreen(state: GalleryState, actions: GalleryActions) {
                     "Ask again" to actions.onRequestAccess,
                 )
                 GalleryAccess.TOO_OLD -> Message(
-                    "This frame's software is too old for FrameAlt to list its photos. Sending still works.",
+                    "This frame's software is too old for Photo Frame to list its photos. Sending still works.",
                     null,
                 )
                 GalleryAccess.FAILED -> Message(state.failure ?: "Couldn't reach ${state.frameName}.", "Try again" to actions.onRefresh)
@@ -329,7 +329,7 @@ private fun AccessNeeded(state: GalleryState, actions: GalleryActions) {
         Text("See what's on your frame", style = MaterialTheme.typography.headlineMedium)
         Spacer(Modifier.height(12.dp))
         Text(
-            "FrameAlt can show the photos on ${state.frameName} and let you delete, hide or show them. " +
+            "Photo Frame can show the photos on ${state.frameName} and let you delete, hide or show them. " +
                 "The frame's owner has to allow this once, on the frame itself.",
             style = MaterialTheme.typography.bodyLarge,
         )

@@ -71,7 +71,7 @@ class PhotoViewModel(private val container: AppContainer, private val id: Long) 
                         loading = false,
                         bitmap = bitmap,
                         caption = fetched.caption,
-                        unavailable = if (bitmap == null) "FrameAlt can only show photos for now." else null,
+                        unavailable = if (bitmap == null) "Photo Frame can only show photos for now." else null,
                     )
                 }
             } catch (failure: Exception) {
@@ -79,7 +79,7 @@ class PhotoViewModel(private val container: AppContainer, private val id: Long) 
                 _state.update {
                     it.copy(
                         loading = false,
-                        unavailable = if (video) "FrameAlt can only show photos for now." else describe(failure),
+                        unavailable = if (video) "Photo Frame can only show photos for now." else describe(failure),
                     )
                 }
             }
@@ -96,7 +96,7 @@ class PhotoViewModel(private val container: AppContainer, private val id: Long) 
                     val values = ContentValues().apply {
                         put(MediaStore.Images.Media.DISPLAY_NAME, "frame-${java.lang.Long.toHexString(id)}.$extension")
                         put(MediaStore.Images.Media.MIME_TYPE, mimeFor(extension))
-                        put(MediaStore.Images.Media.RELATIVE_PATH, "${Environment.DIRECTORY_PICTURES}/FrameAlt")
+                        put(MediaStore.Images.Media.RELATIVE_PATH, "${Environment.DIRECTORY_PICTURES}/Photo Frame")
                         put(MediaStore.Images.Media.IS_PENDING, 1)
                     }
                     val resolver = context.contentResolver
@@ -105,7 +105,7 @@ class PhotoViewModel(private val container: AppContainer, private val id: Long) 
                     resolver.update(uri, ContentValues().apply { put(MediaStore.Images.Media.IS_PENDING, 0) }, null, null)
                 }.isSuccess
             }
-            _state.update { it.copy(message = if (saved) "Saved to Pictures/FrameAlt." else "Couldn't save the photo to this phone.") }
+            _state.update { it.copy(message = if (saved) "Saved to Pictures/Photo Frame." else "Couldn't save the photo to this phone.") }
         }
     }
 

@@ -99,7 +99,7 @@ class SendWorker(context: Context, params: WorkerParameters) : CoroutineWorker(c
             // Retrying cannot fix that; Home shows the reason on its next check.
             container.sendQueue.reportLive(null)
             eventLog.error(TAG, "stopped: ${failure.message}")
-            notifications.stopped("FrameAlt couldn't verify ${frame.displayName}. Open the app for details.")
+            notifications.stopped("Photo Frame couldn't verify ${frame.displayName}. Open the app for details.")
             return Result.failure()
         } catch (failure: Exception) {
             // Could not connect at all. No photo was attempted, so none is charged an attempt;

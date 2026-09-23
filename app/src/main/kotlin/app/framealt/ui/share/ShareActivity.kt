@@ -120,7 +120,7 @@ private fun ShareFlow(container: AppContainer, shared: SharedItems<android.net.U
         composable(ShareRoutes.NOT_PAIRED) {
             Message(
                 title = "Connect your frame first",
-                body = "FrameAlt needs to pair with your Frameo frame before it can send photos. " +
+                body = "Photo Frame needs to pair with your Frameo frame before it can send photos. " +
                     "The photos you shared will be waiting once it's done.",
                 primary = "Connect frame" to { navController.navigate(ShareRoutes.CONNECT) },
                 onClose = onFinished,
@@ -151,7 +151,7 @@ private fun ShareFlow(container: AppContainer, shared: SharedItems<android.net.U
         composable(ShareRoutes.NOTHING) {
             Message(
                 title = "Nothing to send",
-                body = "None of the shared items were photos. FrameAlt sends photos only.",
+                body = "None of the shared items were photos. Photo Frame sends photos only.",
                 primary = null,
                 onClose = onFinished,
             )

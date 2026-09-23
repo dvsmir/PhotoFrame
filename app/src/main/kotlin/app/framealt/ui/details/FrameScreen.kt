@@ -149,7 +149,7 @@ fun FrameScreen(state: HomeState, actions: FrameActions) {
             title = { Text("Remove this frame?") },
             text = {
                 Text(
-                    "Removing the frame deletes FrameAlt's pairing. To send again you'll need " +
+                    "Removing the frame deletes Photo Frame's pairing. To send again you'll need " +
                         "a new friend code from the frame. Photos already on the frame are not " +
                         "affected.",
                 )

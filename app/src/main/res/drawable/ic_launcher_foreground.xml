@@ -1,17 +1,69 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- A picture frame: a rounded rectangle with a horizon and a sun inside. -->
+<!--
+  Launcher icon foreground: a wooden photo frame with a mat and a small landscape inside.
+  Drawn at 92% around the centre so the frame's corners stay inside the 66dp safe circle
+  that round launcher masks keep.
+-->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M30,32 h48 a4,4 0 0 1 4,4 v36 a4,4 0 0 1 -4,4 h-48 a4,4 0 0 1 -4,-4 v-36 a4,4 0 0 1 4,-4 z M30,38 v28 h48 v-28 z" />
-    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M34,62 l10,-12 7,8 9,-11 12,15 z" />
-    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M64,44 m-4,0 a4,4 0 1,0 8,0 a4,4 0 1,0 -8,0" />
+    <group
+        android:pivotX="54"
+        android:pivotY="54"
+        android:scaleX="0.92"
+        android:scaleY="0.92">
+        <!-- Soft shadow under the frame. -->
+        <path
+            android:fillAlpha="0.25"
+            android:fillColor="#FF000000"
+            android:pathData="M30,80 h48 a4,2 0 0 1 0,4 h-48 a4,2 0 0 1 0,-4 z" />
+        <!-- Frame. -->
+        <path android:pathData="M31,29 h46 a3,3 0 0 1 3,3 v44 a3,3 0 0 1 -3,3 h-46 a3,3 0 0 1 -3,-3 v-44 a3,3 0 0 1 3,-3 z">
+            <aapt:attr name="android:fillColor">
+                <gradient
+                    android:type="linear"
+                    android:startX="28"
+                    android:startY="30"
+                    android:endX="80"
+                    android:endY="78">
+                    <item android:offset="0" android:color="#FFD9A066" />
+                    <item android:offset="1" android:color="#FF8A5424" />
+                </gradient>
+            </aapt:attr>
+        </path>
+        <!-- Inner bevel. -->
+        <path
+            android:fillColor="#FF5E3814"
+            android:pathData="M33,34 h42 v40 h-42 z" />
+        <!-- Mat. -->
+        <path
+            android:fillColor="#FFF7F1E6"
+            android:pathData="M34,35 h40 v38 h-40 z" />
+        <!-- The photo: sky, sun, far hills, near hill. -->
+        <path android:pathData="M37.5,38.5 h33 v31 h-33 z">
+            <aapt:attr name="android:fillColor">
+                <gradient
+                    android:type="linear"
+                    android:startX="0"
+                    android:startY="38.5"
+                    android:endX="0"
+                    android:endY="69.5">
+                    <item android:offset="0" android:color="#FF7EC8F2" />
+                    <item android:offset="1" android:color="#FFD7F0FF" />
+                </gradient>
+            </aapt:attr>
+        </path>
+        <path
+            android:fillColor="#FFFFC94A"
+            android:pathData="M64,46 m-4,0 a4,4 0 1,0 8,0 a4,4 0 1,0 -8,0 z" />
+        <path
+            android:fillColor="#FF6FB977"
+            android:pathData="M37.5,62 L46,53 L53,59 L60,51 L70.5,61 V69.5 H37.5 Z" />
+        <path
+            android:fillColor="#FF2F8A4E"
+            android:pathData="M37.5,65 C44,60 52,60 58,63 C62,65 66,64 70.5,62 V69.5 H37.5 Z" />
+    </group>
 </vector>

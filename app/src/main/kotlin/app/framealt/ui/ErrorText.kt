@@ -22,7 +22,7 @@ import java.net.SocketTimeoutException
  */
 fun describeFailure(failure: Throwable, frameName: String, onWifi: Boolean): String = when {
     !onWifi && failure.isConnectivity() ->
-        "You're not on Wi-Fi. FrameAlt sends photos over your home network."
+        "You're not on Wi-Fi. Photo Frame sends photos over your home network."
 
     failure is NotPairedException ->
         "No frame is connected yet."
@@ -37,9 +37,9 @@ fun describeFailure(failure: Throwable, frameName: String, onWifi: Boolean): Str
             "That code didn't work. Codes expire — open Add friend on the frame again and " +
                 "use the new code."
         PairingException.Reason.MALFORMED_CHALLENGE ->
-            "The frame answered in a way FrameAlt didn't understand. Try pairing again."
+            "The frame answered in a way Photo Frame didn't understand. Try pairing again."
         PairingException.Reason.UNSUPPORTED_PACE_VERSION ->
-            "This frame uses a pairing method FrameAlt doesn't support yet."
+            "This frame uses a pairing method Photo Frame doesn't support yet."
     }
 
     failure is FrameException -> when (failure.errorCode) {
@@ -69,11 +69,11 @@ private fun describeProtocolFailure(failure: ProtocolException, frameName: Strin
     val message = failure.message.orEmpty()
     return when {
         message.contains("issuer changed") ->
-            "This frame's certificate changed. For safety FrameAlt won't connect. If you " +
+            "This frame's certificate changed. For safety Photo Frame won't connect. If you " +
                 "reset the frame, remove it here and pair again."
 
         message.contains("unrecognised frame certificate issuer") ->
-            "FrameAlt doesn't recognise the key that signed this frame's certificate. This " +
+            "Photo Frame doesn't recognise the key that signed this frame's certificate. This " +
                 "can happen with very new frames. You can allow it in Settings → Advanced, " +
                 "but only if you're sure this is your frame."
 
@@ -87,10 +87,10 @@ private fun describeProtocolFailure(failure: ProtocolException, frameName: Strin
             "The connection to $frameName was interrupted."
 
         message.contains("predates the media gallery") ->
-            "This frame's software is too old for FrameAlt to list its photos. Sending still works."
+            "This frame's software is too old for Photo Frame to list its photos. Sending still works."
 
         message.contains("photo access has not been granted") ->
-            "FrameAlt doesn't have permission to see the frame's photos yet."
+            "Photo Frame doesn't have permission to see the frame's photos yet."
 
         else -> "The connection to $frameName was interrupted."
     }
@@ -112,7 +112,7 @@ fun describeQueueFailure(item: app.framealt.data.QueueItem, frameName: String): 
             describeFailure(FrameException(known, code.toLong()), frameName, onWifi = true)
         }
         item.lastError == app.framealt.send.MISSING_FILE ->
-            "FrameAlt lost its prepared copy of this photo. Add it again."
+            "Photo Frame lost its prepared copy of this photo. Add it again."
         else -> "Couldn't reach $frameName after several tries."
     }
 }

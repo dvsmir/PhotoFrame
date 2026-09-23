@@ -5,6 +5,13 @@
 
 Derived from [`Intent.md`](Intent.md).
 
+**Name (2026-09-23).** Users see the app as **Photo Frame**: the launcher label, the share
+sheet, and every sentence in the UI. "FrameAlt" stays as the project, repository, module and
+package name (`app.framealt`). Changing the package would install a separate app and lose
+the pairing. Wherever these documents quote UI copy that says "FrameAlt", the app shows
+"Photo Frame". The icon is a wooden photo frame around a small landscape, as an adaptive
+icon with a monochrome layer for themed icons.
+
 ---
 
 ## 1. Background

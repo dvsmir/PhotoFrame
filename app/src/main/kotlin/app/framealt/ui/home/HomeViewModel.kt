@@ -85,7 +85,7 @@ class HomeViewModel(private val container: AppContainer) : ViewModel() {
                 _state.value = when {
                     !onWifi -> current.copy(
                         status = FrameStatus.NO_WIFI,
-                        message = "You're not on Wi-Fi. FrameAlt sends photos over your home network.",
+                        message = "You're not on Wi-Fi. Photo Frame sends photos over your home network.",
                     )
                     current.status == FrameStatus.NO_WIFI -> current.copy(status = FrameStatus.READY, message = null)
                     else -> current
@@ -126,7 +126,7 @@ class HomeViewModel(private val container: AppContainer) : ViewModel() {
             if (!container.socketFactory.isOnWifi) {
                 _state.value = _state.value.copy(
                     status = FrameStatus.NO_WIFI,
-                    message = "You're not on Wi-Fi. FrameAlt sends photos over your home network.",
+                    message = "You're not on Wi-Fi. Photo Frame sends photos over your home network.",
                 )
                 return@launch
             }

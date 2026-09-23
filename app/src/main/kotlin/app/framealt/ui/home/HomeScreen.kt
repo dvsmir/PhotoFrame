@@ -44,7 +44,7 @@ class HomeActions(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(state: HomeState, actions: HomeActions) {
-    Scaffold(topBar = { TopAppBar(title = { Text("FrameAlt") }) }) { padding ->
+    Scaffold(topBar = { TopAppBar(title = { Text("Photo Frame") }) }) { padding ->
         if (!state.loaded) return@Scaffold
         if (state.frame == null) {
             NotPaired(Modifier.padding(padding), actions.onConnectFrame)

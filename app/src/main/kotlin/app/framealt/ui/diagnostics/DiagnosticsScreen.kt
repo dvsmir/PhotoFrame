@@ -115,5 +115,5 @@ fun DiagnosticsScreen(
 
 private fun copyToClipboard(context: Context, text: String) {
     val manager = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-    manager.setPrimaryClip(ClipData.newPlainText("FrameAlt diagnostics", text))
+    manager.setPrimaryClip(ClipData.newPlainText("Photo Frame diagnostics", text))
 }

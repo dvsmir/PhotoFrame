@@ -160,7 +160,7 @@ private fun SkippedSummary(failed: List<ReviewPhoto.Failed>) {
         if (expanded) {
             failed.forEach {
                 Text(
-                    "${it.displayName} couldn't be prepared — it may be too large or in a format FrameAlt can't read.",
+                    "${it.displayName} couldn't be prepared — it may be too large or in a format Photo Frame can't read.",
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier.padding(start = 16.dp, bottom = 4.dp),
                 )
