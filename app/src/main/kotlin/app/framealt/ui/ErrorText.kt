@@ -99,3 +99,20 @@ private fun describeProtocolFailure(failure: ProtocolException, frameName: Strin
 /** True when the failure is the kind that a missing network would have caused. */
 private fun Throwable.isConnectivity(): Boolean =
     this is IOException || this is FrameUnreachableException
+
+/**
+ * Why a queued photo failed, in the same voice as [describeFailure]. The queue stores the
+ * frame's numeric code only so this mapping can happen at display time.
+ */
+fun describeQueueFailure(item: app.framealt.data.QueueItem, frameName: String): String {
+    val code = item.frameErrorCode
+    return when {
+        code != null -> {
+            val known = FrameErrorCode.entries.firstOrNull { it.code == code } ?: FrameErrorCode.UNKNOWN
+            describeFailure(FrameException(known, code.toLong()), frameName, onWifi = true)
+        }
+        item.lastError == app.framealt.send.MISSING_FILE ->
+            "FrameAlt lost its prepared copy of this photo. Add it again."
+        else -> "Couldn't reach $frameName after several tries."
+    }
+}

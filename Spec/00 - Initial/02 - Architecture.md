@@ -223,6 +223,13 @@ data class SentEntity(val peerId: String, val contentId: Long, val sentAt: Long,
 `sent_ledger` powers the "you already sent this one" hint on the review screen (G5) and
 survives clearing the queue.
 
+**As built (Phase 3).** `queue_items` and `sent_ledger` are in Room (`framealt_send.db`,
+schema exported to `app/schemas/`). The `frames` table was not built. With one frame
+(D6), the pairing stays in its own DataStore file (`FrameStore`), as Phase 2 left it. Move
+it into Room when multiple frames arrive. `queue_items` also has a `frameErrorCode`
+column, so the UI can map a frame's refusal to the right sentence (UX §7) without parsing
+`lastError`.
+
 ### 5.3 Settings (DataStore)
 
 Sender name, default fit/crop, WebP quality, "warn on duplicates", last selected frame,
@@ -235,7 +242,7 @@ Input: a `content://` URI. Output: an app-private `.webp` file plus its metadata
 ```
 1. Query size via ImageDecoder header callback (or BitmapFactory inJustDecodeBounds).
    Reject width*height > 50_000_000 → "This photo is too large to prepare."
-2. scale = min(1.0, max(frameWidth / w, frameHeight / h))          // cover the panel
+2. scale = min(1.0, max(panelLong / long(w,h), panelShort / short(w,h)))   // cover the panel
    target = (round(w*scale), round(h*scale)), each at least 1
 3. Decode with ImageDecoder, setTargetSize(target) — samples during decode, so a 50 MP
    source never becomes a 200 MB Bitmap.
@@ -248,6 +255,14 @@ Input: a `content://` URI. Output: an app-private `.webp` file plus its metadata
 
 Notes:
 
+- **Step 2 ignores orientation.** The frame reports its panel in native orientation. The
+  one tested reports 800 × 1280 (protocol §6, kind 2), but it may stand either way and
+  rotates photos itself. Matching the photo's long side to the panel's long side keeps a
+  landscape photo sharp on a portrait-native panel. The original `frameWidth / w` form
+  would have scaled a 4000 × 3000 photo to 1707 × 1280 for this frame, for no visible
+  gain. Unit-tested in `SizingTest`.
+- Decoding targets **sRGB**. The WebP encoder drops colour profiles, so a Display P3
+  photo would otherwise look washed out on the frame.
 - `ImageDecoder` (API 28+) applies EXIF orientation during decode; do not rotate again.
 - **HEIC/HEIF decodes natively**, which is a real advantage over the reference client's
   browser path — Pixel photos need no conversion dance.
@@ -255,8 +270,13 @@ Notes:
   SDR still display; this is correct, not a regression.
 - If the frame's panel size is not yet known (never connected), fall back to
   **1280 × 800** — the reference client's default — and re-prepare nothing afterwards.
-- Preparation happens **at enqueue time, in the foreground**, while the share-sheet URI
-  grant is still valid (§8.5). The queue must never hold only a `content://` URI.
+- Preparation happens **in the foreground**, while the URI grant is still valid (§8.5).
+  The queue must never hold only a `content://` URI. As built, it starts as soon as the
+  review screen opens rather than on Send. That way the content ID, which is a hash of the
+  prepared bytes, is known in time for the "Already sent" badge. Caption and fit/crop are
+  metadata and do not change the bytes, so nothing is redone when they change. Leaving
+  the screen deletes the prepared files. Any left behind by process death are swept at the
+  next start.
 
 ## 7. Send queue
 
@@ -270,6 +290,11 @@ PENDING ──▶ PREPARING ──▶ PREPARED ──▶ SENDING ──▶ SENT
 
 `PREPARING`/`PREPARED` run inline when the user taps Send; `SENDING` onwards belongs to
 the worker.
+
+As built, `PENDING` and `PREPARING` exist only on the review screen and are never stored.
+A row is inserted already `PREPARED`, because only a prepared file may be queued. A
+`SENDING` row found at worker start (process death mid-send) goes back to `PREPARED`
+without being charged an attempt.
 
 ### 7.2 Worker
 
@@ -287,6 +312,26 @@ the worker.
   - `attempts >= 10` → `FAILED` with the last error retained.
 - Enqueued on: user taps Send; app start with a non-empty queue; a Wi-Fi connectivity
   callback firing while items are pending.
+
+**As built (Phase 3)**, where the implementation differs from the list above:
+
+- **Policy.** `REPLACE` when the worker is idle or backing off, so the three triggers run
+  it *now*. `APPEND_OR_REPLACE` while it runs, so photos added in a drain's last moments
+  still go. Plain `KEEP` would leave a fresh batch waiting out an old backoff.
+- **Attempts count only real sends.** If the frame cannot be reached at all, no photo was
+  attempted and none is charged. A sleeping frame (Testing §6 question 6) then means
+  retrying until morning, not ten strikes and `FAILED`. A connection that drops *during*
+  an upload charges that one photo and ends the drain.
+- **No 15-minute cap.** WorkManager's exponential backoff cannot be capped below its own
+  5 h. The three triggers above cover the cases where a long backoff would be noticed.
+- **Any other frame refusal** (e.g. 3 *bad request*) fails that one photo and the drain
+  continues.
+- **The foreground service is best-effort.** Android refuses one started from the
+  background (a backoff retry with the app closed). The drain then runs as plain
+  background work.
+- The drain rules live in `QueueDrainer`, which has no Android dependencies, and are
+  unit-tested with a fake DAO, including that retries carry identical `mediaId` and
+  `contentId`.
 
 ### 7.3 Duplicate safety
 

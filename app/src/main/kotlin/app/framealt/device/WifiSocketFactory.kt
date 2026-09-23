@@ -9,6 +9,9 @@ import android.net.NetworkRequest
 import app.framealt.diag.EventLog
 import app.framealt.protocol.net.FrameSocket
 import app.framealt.protocol.net.FrameSocketFactory
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
@@ -39,18 +42,25 @@ class WifiSocketFactory(
     @Volatile
     private var wifiNetwork: Network? = null
 
+    private val _wifiAvailable = MutableStateFlow(false)
+
+    /** Whether a Wi-Fi network is up. The send queue resumes when this turns true. */
+    val wifiAvailable: StateFlow<Boolean> = _wifiAvailable.asStateFlow()
+
     @Volatile
     private var wifiAddresses: String = ""
 
     private val callback = object : ConnectivityManager.NetworkCallback() {
         override fun onAvailable(network: Network) {
             wifiNetwork = network
+            _wifiAvailable.value = true
             eventLog.info(TAG, "Wi-Fi network available")
         }
 
         override fun onLost(network: Network) {
             if (wifiNetwork == network) {
                 wifiNetwork = null
+                _wifiAvailable.value = false
                 wifiAddresses = ""
                 eventLog.warn(TAG, "Wi-Fi network lost")
             }
@@ -65,6 +75,9 @@ class WifiSocketFactory(
     fun start() {
         val request = NetworkRequest.Builder()
             .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
+            // The default request also demands INTERNET, which would hide exactly the
+            // network this exists for: home Wi-Fi whose internet is down or captive.
+            .removeCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
             .build()
         runCatching { connectivityManager.registerNetworkCallback(request, callback) }
             .onFailure { eventLog.error(TAG, "could not observe Wi-Fi: ${it.message}") }

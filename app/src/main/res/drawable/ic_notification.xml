@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The launcher's picture frame, cropped to the notification icon grid. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="56"
+    android:viewportHeight="56">
+    <group
+        android:translateX="-26"
+        android:translateY="-26">
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M30,32 h48 a4,4 0 0 1 4,4 v36 a4,4 0 0 1 -4,4 h-48 a4,4 0 0 1 -4,-4 v-36 a4,4 0 0 1 4,-4 z M30,38 v28 h48 v-28 z" />
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M34,62 l10,-12 7,8 9,-11 12,15 z" />
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M64,44 m-4,0 a4,4 0 1,0 8,0 a4,4 0 1,0 -8,0" />
+    </group>
+</vector>

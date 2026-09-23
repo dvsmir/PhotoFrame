@@ -72,7 +72,8 @@ implementation this port is based on. It ships **no LICENSE file**, so:
 | 0 — Foundations (crypto + vectors) | **done** — external NaCl/X25519/Ed25519 vectors + all 20 PACE vectors |
 | 1 — Transport & mock frame | **done** — 54 tests green |
 | 2 — Pairing on a real frame | **done** — gate passed 2026-09-23 on a Pixel 6a (Android 17): mDNS discovery, pairing, real frame details, reconnect after force-stop |
-| 3–6 | not started |
+| 3 — Sending | **built, gate open.** Picker → Review & Send → Room queue → WorkManager drain. On 2026-09-23 a 4-photo batch from the Pixel arrived (manual test 5). Tests 6–13 (50-photo batch, lock, Wi-Fi drop, force-stop, airplane, unplug, crop, formats) not yet run. `.\gradlew :app:testDebugUnitTest`: 22 JVM tests for sizing, EXIF dates, drain rules, Home summary |
+| 4–6 | not started |
 
 ### Phase 2 — how it was verified
 
