@@ -130,6 +130,44 @@ the test photos uploaded while building Phases 2–4 are removed from the frame 
 **Gate** — every success criterion in [`00 - Overview.md`](00%20-%20Overview.md) §7,
 on both a Pixel 6 and a Pixel 10.
 
+## Open items — paused 2026-09-23
+
+Work stopped after Phase 5 was built. Phases 0–4 are closed; Phase 5 is built and
+mostly verified; Phase 6 has not started. Nothing below blocks using the app; each item
+is a check or fix that was deliberately left for later. Results so far are in
+[`04 - Testing.md`](04%20-%20Testing.md) §8.1–§8.3.
+
+**Tests not run**
+
+| Phase | Item | What is needed |
+|---|---|---|
+| 3 | Test 11: unplug the frame mid-send | Not run by decision. Expected behaviour, traced from the code, is in Testing §8.1. |
+| 3 | Test 9: resume when the app is *reopened* after a force-stop | In the run, Android restarted the process by itself and it finished the queue. Reopening as the only trigger was never exercised. |
+| 4 | Mixed share (photos plus a PDF) on the device | Classification is unit-tested (`SharedItemsTest`); not yet run from a real share sheet. |
+| 4 | Share before any frame is paired | Needs the pairing removed and a friend code. |
+| 5 | Test 16: grid smoothness and memory at scale | Scrolls through 1330 items; not measured. |
+| 5 | Test 18: deny or ignore the access request | Check the timeout copy appears and nothing gets stuck. |
+| 5 | Item count matches the official Frameo app | The app lists 1330 (1328 photos, 2 videos) after cleanup. |
+| 5 | *Show on frame now* visibly works | No receipt exists for kind 35, so it needs a look at the frame. |
+| — | Testing §6 question 1: does the frame de-duplicate on re-send? | Decides whether §7.3 of the architecture needs a reconciliation pass. |
+| — | Testing §6 question 6: a sleeping frame | Whether it stops advertising, stops accepting TCP, or both. |
+
+**Known gaps and rough edges**
+
+- **Manual address entry is not wired up.** The connect screen shows host and port but
+  has no fields to type them into, although UX §2.2 requires it as the fallback when mDNS
+  is blocked. A Phase 2 gap; fix before release.
+- **Nothing notices the frame coming back** after an outage. The queue waits for its next
+  backoff retry (up to WorkManager's 5 h cap) unless the user taps *Send now* or opens
+  the app. Cheap fix: also retry on app foreground.
+- **Review & Send in landscape**: the caption and switch take most of the height, so few
+  photos are visible (it scrolls).
+- **`framectl` prints full peer IDs** in `pair` and `info`, against the rule to show
+  only the first 8 hex characters.
+- **2 test photos still on the frame**, sent by `framectl` from the desktop on 2026-09-23
+  (a blue "FrameAlt upload test" card and a noisy "multi-chunk test" card). The phone has
+  no record of them, so remove them by hand: in the gallery, long-press → Delete.
+
 ## 1. Risks
 
 | Risk | Likelihood | Impact | Mitigation |

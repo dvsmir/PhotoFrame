@@ -77,6 +77,8 @@ implementation this port is based on. It ships **no LICENSE file**, so:
 | 5 — Gallery + managing | **built, gate mostly passed.** Scope revised 2026-09-23 (D2): the gallery also deletes, hides/shows and displays now. Tests 15 and 17 pass, and the build-time test photos were cleaned up with "Select photos sent from this phone" (`04 - Testing.md` §8.3). Open: 16 (not measured), 18 (deny/timeout), comparing the count with the official app, and 2 `framectl` test photos still on the frame |
 | 6 | not started |
 
+**Paused 2026-09-23.** Everything not yet run or fixed is listed in `05 - Plan.md`, "Open items". Start there when resuming.
+
 ### Phase 2 — how it was verified
 
 On 2026-09-23 the frame was awake, and `framectl` (desktop) and the app (Pixel 6a,
