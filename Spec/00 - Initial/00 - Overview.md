@@ -37,7 +37,7 @@ an implementation detail.
 | # | Decision | Value | Consequence |
 |---|---|---|---|
 | D1 | Network topology | **LAN only** — phone and frame on the same Wi-Fi | No relay, no internet path, no SecureDeviceGrid reverse engineering. Sending only works at home. |
-| D2 | v1 feature scope | **Send + browse gallery** | Upload path plus read-only view of what is on the frame. The gallery needs the frame's *view photos* permission; sending needs pairing only. No delete/hide/display in v1. |
+| D2 | v1 feature scope | **Send + gallery with management** | Upload path, plus a gallery that shows what is on the frame *and* manages it: delete, hide/show, display now. The gallery needs the frame's *view* and *manage* permissions, requested together and approved once on the frame; sending needs pairing only. (Revised 2026-09-23: a read-only gallery made little sense.) |
 | D3 | Protocol implementation | **Pure Kotlin port + BouncyCastle** | No NDK, no JNI, no Go toolchain. Protocol lives in a plain Kotlin/JVM module that unit-tests on the desktop JVM in milliseconds. |
 | D4 | Send entry points | **Android share sheet + in-app photo picker** | `ACTION_SEND` / `ACTION_SEND_MULTIPLE` for `image/*`, plus `PickMultipleVisualMedia`. No watched-album auto-sync, no in-app camera. |
 | D5 | Image preparation | **Match frame resolution** | Downscale so the photo just covers the frame panel (the frame reports its own width/height), encode WebP q≈85. |
@@ -64,9 +64,9 @@ an implementation detail.
   (The queue in D7 covers *picking* photos while away; the *send* still waits for
   home Wi-Fi.)
 - **N2** — Video upload (D8).
-- **N3** — Managing the frame: no delete, hide/show, "display this now", album editing,
-  brightness/sleep/settings, or firmware actions. Deliberately deferred — see
-  [`05 - Plan.md`](05%20-%20Plan.md) §5.
+- **N3** — Managing the frame *itself*: no album editing, brightness/sleep/settings, or
+  firmware actions. (Managing the *photos* on it, meaning delete, hide/show and display
+  now, is in scope since 2026-09-23; see D2.)
 - **N4** — Replacing the official app entirely. The frame's own settings, Wi-Fi setup
   and friend management stay on the frame; the official app stays installed if wanted.
 - **N5** — Play Store distribution, multi-user accounts, telemetry, analytics, or crash

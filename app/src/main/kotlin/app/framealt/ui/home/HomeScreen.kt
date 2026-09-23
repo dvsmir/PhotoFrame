@@ -14,6 +14,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
@@ -54,6 +55,7 @@ class HomeActions(
     val onSendNow: () -> Unit,
     val onRetry: (QueueItem) -> Unit,
     val onRemove: (QueueItem) -> Unit,
+    val onOpenGallery: () -> Unit,
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -166,6 +168,13 @@ private fun PairedState(state: HomeState, frame: StoredFrame, actions: HomeActio
     }
 
     Spacer(Modifier.height(16.dp))
+    OutlinedButton(onClick = actions.onOpenGallery, modifier = Modifier.fillMaxWidth()) {
+        Icon(Icons.Default.PhotoLibrary, contentDescription = null)
+        Spacer(Modifier.size(8.dp))
+        Text("On the frame")
+    }
+
+    Spacer(Modifier.height(8.dp))
     OutlinedButton(onClick = actions.onRefresh, modifier = Modifier.fillMaxWidth()) {
         Icon(Icons.Default.Refresh, contentDescription = null)
         Spacer(Modifier.size(8.dp))

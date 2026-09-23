@@ -485,7 +485,7 @@ thumbnails.
 |---|---|---|
 | 1 | uint | `1` = view photos, `3` = view + manage |
 
-v1 sends `1`. The frame shows a prompt; the owner taps Allow **on the frame**. There is
+v1 sends `3` (view and manage, D2 as revised on 2026-09-23). The frame shows a prompt; the owner taps Allow **on the frame**. There is
 no push response — poll `GetInfo` (kind 1) every 2 s until the permission bits flip.
 
 ### Kind 31 / 32 — media list
@@ -507,12 +507,15 @@ Item submessage:
 | 4 | sint64 | capture time, ms |
 | 5 | sint64 | receive time, ms |
 
-### Kinds 33 / 34 / 35 — *deferred, documented for later*
+### Kinds 33 / 34 / 35 — manage (in v1 since 2026-09-23)
 
 - **33** visibility: `1` = packed ID list, `2` = `0` hide / `1` show, `16` = receipt.
 - **34** delete: `1` = packed ID list, `16` = receipt.
 - **35** display now: `1` = sint64 ID. **No receipt is returned** — fire and forget.
 - 33/34 accept 1…1000 IDs; 35 accepts exactly one. All three require *manage* permission.
+- 33 and 34 are answered with a kind 6 receipt for field 16; an error submessage in the
+  receipt's field 2 means the frame refused. Callers split longer lists into requests of
+  at most 1000.
 
 ## 7. Error submessage
 

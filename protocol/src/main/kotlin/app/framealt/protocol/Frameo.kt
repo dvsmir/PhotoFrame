@@ -126,6 +126,28 @@ public class FrameSession internal constructor(
     /** Asks for photo access. The owner approves on the frame; poll [refreshInfo] afterwards. */
     public fun requestPermission(manage: Boolean = false): Unit = client.requestPermission(manage)
 
+    /**
+     * Hides ([visible] false) or shows items in the frame's slideshow; they stay on the
+     * frame either way. Needs *manage* permission. Any number of IDs: they go out in
+     * requests of at most 1000, each confirmed by the frame before the next.
+     */
+    public fun setVisibility(ids: Collection<Long>, visible: Boolean) {
+        ids.distinct().chunked(FrameoClient.MAX_MANAGE_IDS).forEach { client.setVisibility(it, visible) }
+    }
+
+    /**
+     * Deletes items from the frame, for everyone, irreversibly. Needs *manage* permission.
+     *
+     * Batches of at most 1000, each confirmed before the next. If a later batch fails, the
+     * earlier ones are already gone; re-list to see what remains.
+     */
+    public fun delete(ids: Collection<Long>) {
+        ids.distinct().chunked(FrameoClient.MAX_MANAGE_IDS).forEach { client.delete(it) }
+    }
+
+    /** Shows one item on the frame now. The frame sends no receipt, so this cannot be confirmed. */
+    public fun displayNow(id: Long): Unit = client.displayNow(id)
+
     override fun close(): Unit = transport.close()
 }
 

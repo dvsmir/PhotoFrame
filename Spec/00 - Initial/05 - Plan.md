@@ -101,13 +101,19 @@ all 20 arrive. Repeat with the app force-stopped beforehand.
 ## Phase 5 — Gallery
 
 **Build**
-- Request-access flow (kind 27 + polling) with its waiting and timeout states.
+- Request-access flow (kind 27 type 3: view + manage, + polling) with its waiting and
+  timeout states.
 - Media list, thumbnail grid (kind 23 at 400×400), bounded memory cache, badges for
   video/greeting, header counts, pull to refresh.
 - Photo preview with full-size fetch and Save to phone via MediaStore.
 - Protocol < 13 fallback copy.
+- **Managing** (D2, revised 2026-09-23): kinds 33/34/35 in `:protocol` with mock-frame
+  tests; multi-select with Delete / Hide / Show; preview actions; "Select photos sent
+  from this phone", backed by the media ID now kept in `sent_ledger`.
 
-**Gate** — manual tests 15–18 pass; the item count matches the official Frameo app.
+**Gate** — manual tests 15–18 pass; the item count matches the official Frameo app; and
+the test photos uploaded while building Phases 2–4 are removed from the frame with
+"Select photos sent from this phone" → Delete, leaving everything else untouched.
 
 ## Phase 6 — Hardening & release
 
@@ -163,10 +169,7 @@ Not blockers — each has a stated default so work can proceed.
 
 Ordered by expected value.
 
-1. **Manage operations** — hide/show (kind 33), delete (34), display now (35). The
-   protocol work is already documented in [`01 - Protocol.md`](01%20-%20Protocol.md) §6;
-   what is missing is the *manage* permission request (kind 27 type 3), multi-select in
-   the gallery, and a genuinely scary confirmation on delete.
+1. ~~**Manage operations**~~ — moved into v1, Phase 5 (D2 revised 2026-09-23).
 2. **Multiple frames + fan-out** — the storage model already supports it; it costs a
    frame picker, a destination selector in Review & Send, and per-frame queue drains.
 3. **Watched album auto-send** — nominate an album; new items are queued automatically.

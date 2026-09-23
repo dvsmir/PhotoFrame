@@ -16,14 +16,22 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import app.framealt.AppContainer
 import app.framealt.ui.connect.ConnectScreen
 import app.framealt.ui.connect.ConnectViewModel
 import app.framealt.ui.details.ConnectionDetailsScreen
 import app.framealt.ui.diagnostics.DiagnosticsScreen
+import app.framealt.ui.gallery.GalleryActions
+import app.framealt.ui.gallery.GalleryScreen
+import app.framealt.ui.gallery.GalleryViewModel
+import app.framealt.ui.gallery.PhotoActions
+import app.framealt.ui.gallery.PhotoScreen
+import app.framealt.ui.gallery.PhotoViewModel
 import app.framealt.ui.home.HomeActions
 import app.framealt.ui.home.HomeScreen
 import app.framealt.ui.home.HomeViewModel
@@ -36,6 +44,10 @@ object Routes {
     const val DETAILS = "details"
     const val DIAGNOSTICS = "diagnostics"
     const val REVIEW = "review"
+    const val GALLERY = "gallery"
+    const val PHOTO = "photo/{id}"
+
+    fun photo(id: Long) = "photo/$id"
 }
 
 @Composable
@@ -71,6 +83,7 @@ fun AppNavigation(container: AppContainer, reviewRequest: Int = 0, modifier: Mod
                     onSendNow = model::sendNow,
                     onRetry = model::retry,
                     onRemove = model::remove,
+                    onOpenGallery = { navController.navigate(Routes.GALLERY) },
                 ),
             )
         }
@@ -118,6 +131,54 @@ fun AppNavigation(container: AppContainer, reviewRequest: Int = 0, modifier: Mod
                     if (granted) model.send() else notificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
                 },
                 onBack = { navController.popBackStack() },
+            )
+        }
+
+        composable(Routes.GALLERY) {
+            val model: GalleryViewModel = viewModel { GalleryViewModel(container) }
+            val state by model.state.collectAsState()
+            GalleryScreen(
+                state = state,
+                actions = GalleryActions(
+                    onBack = { navController.popBackStack() },
+                    onRefresh = model::refresh,
+                    onRequestAccess = model::requestAccess,
+                    onCancelRequest = model::cancelRequest,
+                    onOpen = { navController.navigate(Routes.photo(it.id)) },
+                    onToggle = model::toggle,
+                    onStartSelection = model::startSelection,
+                    onClearSelection = model::clearSelection,
+                    onSelectSentFromThisPhone = model::selectSentFromThisPhone,
+                    onAskDelete = model::askDelete,
+                    onDismissDelete = model::dismissDelete,
+                    onConfirmDelete = model::confirmDelete,
+                    onSetVisibility = model::setVisibility,
+                    onNeedThumbnail = model::requestThumbnail,
+                    onMessageShown = model::messageShown,
+                ),
+            )
+        }
+
+        composable(
+            Routes.PHOTO,
+            arguments = listOf(navArgument("id") { type = NavType.LongType }),
+        ) { entry ->
+            val id = entry.arguments?.getLong("id") ?: return@composable
+            val context = LocalContext.current
+            val model: PhotoViewModel = viewModel { PhotoViewModel(container, id) }
+            val state by model.state.collectAsState()
+            PhotoScreen(
+                state = state,
+                actions = PhotoActions(
+                    onBack = { navController.popBackStack() },
+                    onSave = { model.save(context) },
+                    onDisplayNow = model::displayNow,
+                    onSetVisible = model::setVisible,
+                    onAskDelete = model::askDelete,
+                    onDismissDelete = model::dismissDelete,
+                    onConfirmDelete = model::confirmDelete,
+                    onMessageShown = model::messageShown,
+                ),
             )
         }
 

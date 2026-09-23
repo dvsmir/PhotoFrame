@@ -413,4 +413,105 @@ class SessionTest {
             frame.assertHealthy()
         }
     }
+
+    // --- managing (kinds 33, 34, 35) --------------------------------------------------
+
+    private val manager = FramePermissions(view = true, manage = true)
+
+    private fun MockFrame.session(): FrameSession {
+        val transport = connect()
+        return FrameSession(transport, FrameoClient(transport, "phone")).also { it.refreshInfo() }
+    }
+
+    @Test
+    @DisplayName("delete removes exactly the given items, negative IDs included, after a receipt")
+    fun deleteItems() {
+        MockFrame(permissions = manager).start().use { frame ->
+            frame.media = listOf(mediaItem(id = 1), mediaItem(id = -9_007_199_254_740_993), mediaItem(id = 3))
+            frame.session().use { session ->
+                session.delete(listOf(1L, -9_007_199_254_740_993))
+
+                assertEquals(listOf(3L), session.listMedia().map { it.id })
+            }
+            assertEquals(listOf(34 to setOf(1L, -9_007_199_254_740_993)), frame.manageRequests.toList())
+            frame.assertHealthy()
+        }
+    }
+
+    @Test
+    @DisplayName("hide and show flip the visible flag and leave the item on the frame")
+    fun hideAndShow() {
+        MockFrame(permissions = manager).start().use { frame ->
+            frame.media = listOf(mediaItem(id = 1), mediaItem(id = 2))
+            frame.session().use { session ->
+                session.setVisibility(listOf(2L), visible = false)
+                assertEquals(listOf(true, false), session.listMedia().map { it.visible })
+
+                session.setVisibility(listOf(2L), visible = true)
+                assertEquals(listOf(true, true), session.listMedia().map { it.visible })
+            }
+            frame.assertHealthy()
+        }
+    }
+
+    @Test
+    @DisplayName("more than 1000 IDs go out as several requests of at most 1000")
+    fun deleteIsBatched() {
+        MockFrame(permissions = manager).start().use { frame ->
+            frame.media = (1..2_345).map { mediaItem(id = it.toLong()) }
+            frame.session().use { session ->
+                session.delete((1L..2_345L).toList())
+
+                assertTrue(session.listMedia().isEmpty())
+            }
+            assertEquals(listOf(1000, 1000, 345), frame.manageRequests.map { it.second.size })
+            frame.assertHealthy()
+        }
+    }
+
+    @Test
+    @DisplayName("a refused delete surfaces the frame's error and changes nothing")
+    fun deleteRefused() {
+        MockFrame(permissions = manager).start().use { frame ->
+            frame.media = listOf(mediaItem(id = 1))
+            frame.manageError = FrameErrorCode.PERMISSION_REQUIRED
+            frame.session().use { session ->
+                val failure = assertFailsWith<FrameException> { session.delete(listOf(1L)) }
+                assertEquals(FrameErrorCode.PERMISSION_REQUIRED, failure.errorCode)
+                assertEquals(listOf(1L), session.listMedia().map { it.id })
+            }
+            frame.assertHealthy()
+        }
+    }
+
+    @Test
+    @DisplayName("without manage permission nothing is sent")
+    fun manageRequiresPermission() {
+        MockFrame(permissions = FramePermissions(view = true)).start().use { frame ->
+            frame.media = listOf(mediaItem(id = 1))
+            frame.session().use { session ->
+                assertFailsWith<ProtocolException> { session.delete(listOf(1L)) }
+                assertFailsWith<ProtocolException> { session.setVisibility(listOf(1L), visible = false) }
+                assertFailsWith<ProtocolException> { session.displayNow(1L) }
+            }
+            assertTrue(frame.manageRequests.isEmpty())
+            assertTrue(frame.displayedNow.isEmpty())
+            frame.assertHealthy()
+        }
+    }
+
+    @Test
+    @DisplayName("display now sends the one ID and expects no receipt")
+    fun displayNow() {
+        MockFrame(permissions = manager).start().use { frame ->
+            frame.media = listOf(mediaItem(id = -42))
+            frame.session().use { session ->
+                session.displayNow(-42)
+                // A following request proves the connection is still in step after 35.
+                assertEquals(1, session.listMedia().size)
+            }
+            assertEquals(listOf(-42L), frame.displayedNow.toList())
+            frame.assertHealthy()
+        }
+    }
 }

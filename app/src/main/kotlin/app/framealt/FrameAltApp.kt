@@ -10,6 +10,7 @@ import app.framealt.device.FrameConnectionManager
 import app.framealt.device.NsdDiscovery
 import app.framealt.device.WifiSocketFactory
 import app.framealt.diag.EventLog
+import app.framealt.gallery.GalleryRepository
 import app.framealt.media.ImagePipeline
 import app.framealt.send.SendNotifications
 import app.framealt.send.SendQueue
@@ -77,6 +78,14 @@ class AppContainer(application: Application) {
         context = application,
         queue = database.queue(),
         outbox = { imagePipeline.outbox },
+        eventLog = eventLog,
+    )
+
+    val gallery = GalleryRepository(
+        connections = connections,
+        queue = database.queue(),
+        ledger = database.ledger(),
+        scope = scope,
         eventLog = eventLog,
     )
 

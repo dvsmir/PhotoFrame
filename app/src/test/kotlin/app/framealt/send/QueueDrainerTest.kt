@@ -54,6 +54,7 @@ class QueueDrainerTest {
         assertEquals(listOf("a", "b", "c"), order)
         assertTrue(dao.rows.values.all { it.state == QueueState.SENT })
         assertEquals(setOf(2000L, 2001L, 2002L), ledger.rows.map { it.contentId }.toSet())
+        assertEquals(setOf(1000L, 1001L, 1002L), ledger.rows.mapNotNull { it.mediaId }.toSet(), "the gallery finds our photos by these")
         assertEquals(3, deleted.size)
     }
 
@@ -209,6 +210,8 @@ private class FakeQueueDao : QueueDao {
     }
     override suspend fun delete(id: String) { rows.remove(id) }
     override suspend fun cancelAllWaiting(at: Long) = Unit
+    override suspend fun sentMediaIds(peerId: String) =
+        rows.values.filter { it.peerId == peerId && it.state == QueueState.SENT }.map { it.mediaId }
     override suspend fun pruneFinished(before: Long) = Unit
 }
 
@@ -217,4 +220,5 @@ private class FakeLedger : SentLedgerDao {
     override suspend fun record(photo: SentPhoto) { rows += photo }
     override suspend fun alreadySent(peerId: String, contentIds: List<Long>) =
         rows.filter { it.peerId == peerId && it.contentId in contentIds }.map { it.contentId }
+    override suspend fun sentMediaIds(peerId: String) = rows.filter { it.peerId == peerId }.mapNotNull { it.mediaId }
 }

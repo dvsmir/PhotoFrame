@@ -115,7 +115,7 @@ class QueueDrainer(
 
             val now = clock()
             queue.markSent(item.id, now)
-            ledger.record(SentPhoto(peerId, item.contentId, now, item.displayName))
+            ledger.record(SentPhoto(peerId, item.contentId, now, item.displayName, item.mediaId))
             runCatching { deleteFile(item.preparedPath) }
             sent++
         }

@@ -78,4 +78,9 @@ data class SentPhoto(
     val contentId: Long,
     val sentAt: Long,
     val displayName: String,
+    /**
+     * The ID the frame holds the photo under, so the gallery can pick out what this phone
+     * sent. Null for rows written before schema version 2.
+     */
+    val mediaId: Long? = null,
 )

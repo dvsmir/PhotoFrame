@@ -1,6 +1,7 @@
 package app.framealt.data
 
 import android.content.Context
+import androidx.room.AutoMigration
 import androidx.room.Dao
 import androidx.room.Database
 import androidx.room.Insert
@@ -76,6 +77,10 @@ interface QueueDao {
     @Query("UPDATE queue_items SET state = 'CANCELLED', completedAt = :at WHERE state IN ('PREPARED', 'FAILED')")
     suspend fun cancelAllWaiting(at: Long)
 
+    /** Also covers sends from before the ledger kept media IDs (schema 1). */
+    @Query("SELECT mediaId FROM queue_items WHERE peerId = :peerId AND state = 'SENT'")
+    suspend fun sentMediaIds(peerId: String): List<Long>
+
     @Query("DELETE FROM queue_items WHERE state IN ('SENT', 'CANCELLED') AND completedAt < :before")
     suspend fun pruneFinished(before: Long)
 }
@@ -88,6 +93,10 @@ interface SentLedgerDao {
 
     @Query("SELECT contentId FROM sent_ledger WHERE peerId = :peerId AND contentId IN (:contentIds)")
     suspend fun alreadySent(peerId: String, contentIds: List<Long>): List<Long>
+
+    /** Media IDs this phone sent to the frame and still remembers, for the gallery. */
+    @Query("SELECT mediaId FROM sent_ledger WHERE peerId = :peerId AND mediaId IS NOT NULL")
+    suspend fun sentMediaIds(peerId: String): List<Long>
 }
 
 class QueueConverters {
@@ -98,7 +107,15 @@ class QueueConverters {
     fun toState(value: String): QueueState = QueueState.valueOf(value)
 }
 
-@Database(entities = [QueueItem::class, SentPhoto::class], version = 1, exportSchema = true)
+@Database(
+    entities = [QueueItem::class, SentPhoto::class],
+    version = 2,
+    exportSchema = true,
+    autoMigrations = [
+        // 2: sent_ledger.mediaId, for "Select photos sent from this phone".
+        AutoMigration(from = 1, to = 2),
+    ],
+)
 @TypeConverters(QueueConverters::class)
 abstract class SendDatabase : RoomDatabase() {
 

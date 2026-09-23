@@ -106,6 +106,15 @@ internal class MockFrame(
     /** When set, list responses carry this error. */
     @Volatile var listError: FrameErrorCode? = null
 
+    /** Every kind 33/34 request received, as (kind, IDs), in order. */
+    val manageRequests: MutableList<Pair<Int, Set<Long>>> = CopyOnWriteArrayList()
+
+    /** IDs asked to be shown now (kind 35), in order. */
+    val displayedNow: MutableList<Long> = CopyOnWriteArrayList()
+
+    /** When set, the next kind 33/34 receipt carries this error instead of success. */
+    @Volatile var manageError: FrameErrorCode? = null
+
     /** When true, a permission request immediately flips the view bit. */
     @Volatile var grantViewOnRequest: Boolean = false
 
@@ -354,6 +363,12 @@ internal class MockFrame(
                 Kind.MEDIA_METADATA -> startUpload(fields)
                 Kind.MEDIA_DATA -> continueUpload(fields)
                 Kind.REQUEST_PERMISSION -> handlePermissionRequest(fields.uint(1))
+                Kind.SET_VISIBILITY -> handleManage(kind, fields) { ids ->
+                    val visible = fields.uint(2) == 1L
+                    media = media.map { if (it.id in ids) MediaItem(it.id, it.type, visible, it.capturedAtMillis, it.receivedAtMillis) else it }
+                }
+                Kind.DELETE -> handleManage(kind, fields) { ids -> media = media.filterNot { it.id in ids } }
+                Kind.DISPLAY_NOW -> displayedNow.add(fields.sint(1))
                 Kind.RECEIPT -> Unit // the client acknowledging one of our events
                 else -> Unit
             }
@@ -461,6 +476,24 @@ internal class MockFrame(
                 ),
             )
             pendingUpload = null
+            sendEnvelope(Kind.RECEIPT, Proto.uint(1, receipt))
+        }
+
+        /**
+         * Kinds 33 and 34: apply [change] to the library and answer with a receipt, or with
+         * the armed [manageError] instead, the way a frame refuses.
+         */
+        private fun handleManage(kind: Int, fields: Fields, change: (Set<Long>) -> Unit) {
+            val ids = Proto.parsePackedIds(fields.blob(1)).toSet()
+            manageRequests.add(kind to ids)
+            val receipt = fields.uint(16)
+            val error = manageError
+            if (error != null) {
+                manageError = null
+                sendEnvelope(Kind.RECEIPT, Proto.join(Proto.uint(1, receipt), Proto.blob(2, Proto.uint(1, error.code.toLong()))))
+                return
+            }
+            change(ids)
             sendEnvelope(Kind.RECEIPT, Proto.uint(1, receipt))
         }
 

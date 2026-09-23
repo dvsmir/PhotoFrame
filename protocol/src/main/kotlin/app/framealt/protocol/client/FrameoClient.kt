@@ -25,6 +25,9 @@ internal object Kind {
     const val REQUEST_PERMISSION = 27
     const val LIST_REQUEST = 31
     const val LIST_RESPONSE = 32
+    const val SET_VISIBILITY = 33
+    const val DELETE = 34
+    const val DISPLAY_NOW = 35
 }
 
 /**
@@ -217,6 +220,49 @@ internal class FrameoClient(
         send(Kind.REQUEST_PERMISSION, Proto.uint(1, if (manage) 3 else 1))
     }
 
+    /**
+     * Hides or shows items in the frame's slideshow. They stay on the frame either way.
+     *
+     * @param ids 1 to [MAX_MANAGE_IDS]; callers split longer lists.
+     */
+    fun setVisibility(ids: List<Long>, visible: Boolean) {
+        requireManage(ids)
+        val receipt = CryptoRandom.id63()
+        send(
+            Kind.SET_VISIBILITY,
+            Proto.join(Proto.packedIds(1, ids), Proto.uint(2, if (visible) 1 else 0), Proto.uint(16, receipt)),
+        )
+        awaitReceipt(receipt)
+    }
+
+    /**
+     * Deletes items from the frame. Irreversible, and for everyone who uses the frame.
+     *
+     * @param ids 1 to [MAX_MANAGE_IDS]; callers split longer lists.
+     */
+    fun delete(ids: List<Long>) {
+        requireManage(ids)
+        val receipt = CryptoRandom.id63()
+        send(Kind.DELETE, Proto.join(Proto.packedIds(1, ids), Proto.uint(16, receipt)))
+        awaitReceipt(receipt)
+    }
+
+    /**
+     * Puts one item on the frame's screen now. The frame sends no receipt for this, so
+     * success cannot be confirmed; it is fire and forget by protocol design.
+     */
+    fun displayNow(id: Long) {
+        requireManage(listOf(id))
+        send(Kind.DISPLAY_NOW, Proto.sint(1, id))
+    }
+
+    private fun requireManage(ids: List<Long>) {
+        if (!info.permissions.manage) {
+            throw ProtocolException("photo management has not been granted on the frame")
+        }
+        require(ids.size in 1..MAX_MANAGE_IDS) { "between 1 and $MAX_MANAGE_IDS IDs per request, got ${ids.size}" }
+    }
+
     // --- plumbing ---------------------------------------------------------------------
 
     private class Received(val version: Int, val kind: Int, val fields: Fields)
@@ -301,6 +347,9 @@ internal class FrameoClient(
 
     companion object {
         const val MAX_UPLOAD_BYTES: Int = 32 shl 20
+
+        /** The frame accepts at most this many IDs in one kind 33 or 34 message. */
+        const val MAX_MANAGE_IDS: Int = 1000
         private const val MAX_DOWNLOAD_BYTES = (64L shl 20)
 
         /** Chunk size for frames older than protocol version 4. */
