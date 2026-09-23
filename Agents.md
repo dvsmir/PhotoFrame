@@ -14,6 +14,20 @@ $env:JAVA_HOME = "$env:LOCALAPPDATA\Programs\Android Studio\jbr"
 .\gradlew build
 ```
 
+**Release build (what goes on the phone).** Signed with the key in
+`%USERPROFILE%\.photoframe\release.jks`, through `keystore.properties` in the repo root. Both
+are git-ignored; **back up the key**, because every update must be signed with it. Without
+`keystore.properties` the release APK is still built, just unsigned.
+
+```powershell
+.\gradlew :app:assembleRelease
+adb install -r app\build\outputs\apk\release\app-release.apk   # dev.dsmirnov.photoframe
+```
+
+The release build has no `DebugPickActivity`, no logcat mirror, and is not debuggable
+(`run-as` does not work). For device debugging, install the debug build instead
+(`dev.dsmirnov.photoframe.debug`), which is a separate app with its own pairing.
+
 Regenerating the crypto test vectors (rarely needed — the output is committed):
 
 ```sh

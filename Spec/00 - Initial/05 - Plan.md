@@ -126,6 +126,8 @@ the test photos uploaded while building Phases 2–4 are removed from the frame 
   frame*, denial handling, and re-verification of discovery and connect on a Pixel
   running Android 17.
 - Backup exclusion, `allowBackup=false`, R8 release build, app icon, signing config.
+  *(Done early, 2026-09-23: R8 release build, app icon, and a release signing key outside
+  the repo, used through the git-ignored `keystore.properties`.)*
 - Accessibility pass at 200% font scale, dark mode, TalkBack on the send flow.
 
 **Gate** — every success criterion in [`00 - Overview.md`](00%20-%20Overview.md) §7,
