@@ -9,3 +9,8 @@ captures/
 node_modules/
 # Real friend codes and other local secrets - never commit
 Friendcode.md
+
+# Release signing: passwords and keys stay on this machine
+keystore.properties
+*.jks
+*.keystore
