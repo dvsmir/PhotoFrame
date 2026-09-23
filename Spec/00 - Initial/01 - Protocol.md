@@ -584,6 +584,20 @@ check field 2 error → success or a mapped failure
 The receipt is the **only** proof the frame accepted the photo. A send is not complete
 until it arrives; the queue must not mark an item done before then.
 
+**Observed on a real frame (2026-09-23, protocol 18, via `framectl send`).** Uploading
+needs **no permission**: both sends below succeeded while all four permission bits were
+`false`. The kind 2 permissions control only gallery access (kinds 23, 31/32) and
+management (33–35), never sending.
+
+| File | Size | Kind 5 segments | Result |
+|---|---|---|---|
+| 800 × 1280 WebP, q85, flat test card | 12 628 B | 1 | receipt, no error |
+| 800 × 1280 WebP, q92, noise | 488 466 B | 30 | receipt, no error; about 1.7 s end to end including JVM start and handshake |
+
+So the 16 316-byte chunk size, the receipt in the last segment, and the kind 6 match all
+work on hardware. Whether the photos actually *appear* on the frame, and how captions are
+shown, must be checked by looking at the frame.
+
 ### 8.4 List media
 
 Guard on `permissions.view` and `protocolVersion ≥ 13` before sending. Send kind 31,
