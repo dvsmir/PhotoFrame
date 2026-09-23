@@ -21,7 +21,7 @@ FrameAlt/
 ├── gradle/libs.versions.toml          version catalog
 ├── protocol/                          Kotlin/JVM library — NO Android dependencies
 │   └── src/
-│       ├── main/kotlin/app/framealt/protocol/
+│       ├── main/kotlin/dev/dsmirnov/photoframe/protocol/
 │       │   ├── crypto/     Nacl.kt, HSalsa20.kt, X25519.kt, Nonce.kt, Random.kt
 │       │   ├── wire/       Protobuf.kt, Envelope.kt, Multipart.kt
 │       │   ├── transport/  MdgTransport.kt, Metadata.kt, Certificate.kt, Issuers.kt
@@ -33,7 +33,7 @@ FrameAlt/
 └── app/                               Android application
     ├── schemas/                       exported Room schemas (1, 2)
     └── src/
-        ├── main/kotlin/app/framealt/
+        ├── main/kotlin/dev/dsmirnov/photoframe/
         │   ├── data/      FrameStore, IdentityStore, Settings (DataStore);
         │   │              SendDatabase, QueueItem, SentPhoto (Room)
         │   ├── device/    FrameConnectionManager, NsdDiscovery, WifiSocketFactory

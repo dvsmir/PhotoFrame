@@ -10,7 +10,7 @@
 
     <application>
         <activity
-            android:name="app.framealt.debug.DebugPickActivity"
+            android:name="dev.dsmirnov.photoframe.debug.DebugPickActivity"
             android:exported="true"
             android:theme="@android:style/Theme.Translucent.NoTitleBar" />
     </application>

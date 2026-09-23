@@ -23,7 +23,7 @@ dependencies {
 }
 
 application {
-    mainClass = "app.framealt.framectl.MainKt"
+    mainClass = "dev.dsmirnov.photoframe.framectl.MainKt"
 }
 
 // Lets `gradlew :framectl:run --args="..."` read a friend code typed at the prompt.

@@ -50,7 +50,7 @@ implementation this port is based on. It ships **no LICENSE file**, so:
 - Clone it *outside* this repository. Read it freely; never copy its source in.
 - The one imported artifact is its PACE test fixture, at
   `protocol/src/test/resources/vectors/pace.json`, which records its origin in the file.
-- `protocol/src/main/resources/app/framealt/protocol/issuers.json` is the frame
+- `protocol/src/main/resources/dev/dsmirnov/photoframe/protocol/issuers.json` is the frame
   certificate trust root — a list of public keys, i.e. data, not code.
 
 ## Conventions
@@ -95,11 +95,11 @@ frame asleep. What was learned is recorded in `01 - Protocol.md` (§2, §3.3, §
 kind 2).
 
 **Driving the phone from here.** Debug builds mirror the Diagnostics log to logcat
-under `FrameAlt/<tag>`. The debug package is `app.framealt.debug`.
+under `FrameAlt/<tag>`. The debug package is `dev.dsmirnov.photoframe.debug`.
 
 ```powershell
 adb install -r app\build\outputs\apk\debug\app-debug.apk
-adb shell am start -n app.framealt.debug/app.framealt.ui.MainActivity
+adb shell am start -n dev.dsmirnov.photoframe.debug/dev.dsmirnov.photoframe.ui.MainActivity
 adb logcat -s "FrameAlt/session" "FrameAlt/discovery" "FrameAlt/network"
 ```
 

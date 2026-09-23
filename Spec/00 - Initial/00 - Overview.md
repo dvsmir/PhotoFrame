@@ -6,9 +6,13 @@
 Derived from [`Intent.md`](Intent.md).
 
 **Name (2026-09-23).** Users see the app as **Photo Frame**: the launcher label, the share
-sheet, and every sentence in the UI. "FrameAlt" stays as the project, repository, module and
-package name (`app.framealt`). Changing the package would install a separate app and lose
-the pairing. Wherever these documents quote UI copy that says "FrameAlt", the app shows
+sheet, and every sentence in the UI. The package, namespace and application ID are
+`dev.dsmirnov.photoframe` (debug builds `dev.dsmirnov.photoframe.debug`); the protocol
+library is `dev.dsmirnov.photoframe.protocol` and the CLI `dev.dsmirnov.photoframe.framectl`.
+Until 2026-09-23 all of these were `app.framealt`. The move changed the application ID,
+so it installed as a new app that had to be paired again. "FrameAlt" remains the name of the
+project, the repository, some class names (`FrameAltApp`) and the logcat tag. Wherever
+these documents quote UI copy that says "FrameAlt", the app shows
 "Photo Frame". The icon is a wooden photo frame around a small landscape, as an adaptive
 icon with a monochrome layer for themed icons.
 
@@ -106,7 +110,7 @@ detail in [`01 - Protocol.md`](01%20-%20Protocol.md).
 | `compileSdk` | 37 (Android 17) | Build against the OS the devices actually run. |
 | `targetSdk` | 36 initially, 37 as a tracked follow-up | See the local-network-permission trap in [`02 - Architecture.md`](02%20-%20Architecture.md) §8. Declaring `ACCESS_LOCAL_NETWORK` while targeting ≤36 is explicitly wrong. |
 | Language / UI | Kotlin, Jetpack Compose, Material 3 | — |
-| `applicationId` | `app.framealt` (placeholder, trivially changed) | — |
+| `applicationId` | `dev.dsmirnov.photoframe` (placeholder, trivially changed) | — |
 | Distribution | Debug/release APK installed over ADB or by direct download | See §8. |
 
 Pixel 6 leaves Google's support window in **October 2026**. It keeps working; it just

@@ -7,11 +7,11 @@ plugins {
 }
 
 android {
-    namespace = "app.framealt"
+    namespace = "dev.dsmirnov.photoframe"
     compileSdk = libs.versions.compileSdk.get().toInt()
 
     defaultConfig {
-        applicationId = "app.framealt"
+        applicationId = "dev.dsmirnov.photoframe"
         minSdk = libs.versions.minSdk.get().toInt()
         targetSdk = libs.versions.targetSdk.get().toInt()
         versionCode = 1

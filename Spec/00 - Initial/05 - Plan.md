@@ -203,7 +203,7 @@ Not blockers — each has a stated default so work can proceed.
    if it turns out to matter in use.
 5. **Should an unrecognised-issuer override exist at all?** Default: yes, buried in
    Advanced with a warning. It converts a hard brick into a user decision.
-6. **`app.framealt` as the application ID.** Default: yes; change now if a different
+6. **`dev.dsmirnov.photoframe` as the application ID.** Default: yes; change now if a different
    namespace is preferred, as changing it later means re-pairing is not required but the
    install is.
 
