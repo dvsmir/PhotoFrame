@@ -114,7 +114,11 @@ private fun Paired(modifier: Modifier, state: HomeState, frame: StoredFrame, act
 private fun FrameCard(state: HomeState, frame: StoredFrame, onOpen: () -> Unit) {
     Card(onClick = onOpen, modifier = Modifier.fillMaxWidth()) {
         Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text(frame.displayName, style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f))
+            Column(Modifier.weight(1f)) {
+                // Says what the card is: the name alone could read as a heading, not a control.
+                Text("Frame info", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(frame.displayName, style = MaterialTheme.typography.titleLarge)
+            }
             StatusChip(state.status)
         }
     }
