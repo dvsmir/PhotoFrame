@@ -163,6 +163,9 @@ write the answer back into [`01 - Protocol.md`](01%20-%20Protocol.md) §9 or
    the app should say "the frame is asleep" rather than "the frame is unreachable", which
    are very different messages to the user. Until this is answered, treat *every* absence as
    retryable rather than terminal.
+   Observed 2026-09-22 with the frame awake: it answered both mDNS and a TCP `TELL`
+   (see [`01 - Protocol.md`](01%20-%20Protocol.md) §2). That only covers the awake case;
+   the sleeping case is still open.
 7. **Permission revocation.** Revoke photo access on the frame and confirm the client
    gets error 1 or 5 rather than hanging.
 

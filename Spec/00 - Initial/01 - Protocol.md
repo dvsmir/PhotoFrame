@@ -62,6 +62,15 @@ on any connection failure re-run discovery (forced, cache-busting) and retry onc
 before reporting an error. A manual `host:port` entry must remain available as a
 fallback for networks where mDNS is blocked.
 
+**Observed on a real frame (2026-09-22, awake).** One `_frameo._tcp` service on IPv4,
+`192.168.2.22:36916`. The instance name was 63 hex characters and the peer ID returned in
+`WELC` was 64, with the instance being its prefix, which confirms the truncation rule
+above. The port is not a well-known one. Whether it is stable across reboots is unobserved,
+so treat it as discovered, never configured. mDNS was received on the Windows desktop
+this time, so the firewall problem noted in `framectl`'s `Probe` is not constant.
+On 2026-09-23 the frame was at the same `192.168.2.22:36916`. Whether the frame
+rebooted in between is unknown, so this does not show the port is stable.
+
 ## 3. MDG transport
 
 ### 3.1 Constants
@@ -94,6 +103,11 @@ frame's 32-byte identity public key.
 | 4 | F→C | `🐟COOK` | 8 + `cookieNonce`(16) + `box`(144) = **168 bytes exactly** |
 | 5 | C→F | `🐟VOCH` | 8 + `cookie`(96) + `u64be(1)` + `secretbox(body, n="CurveCP-client-I"‖u64be(1), K)` |
 | 6 | F→C | `🐟REDY` | 8 + `u64be(seq)` + `secretbox(metadata, n="CurveCP-server-R"‖u64be(seq), K)` |
+
+Steps 1–2 are confirmed against a real frame (2026-09-22): a bare `TELL` got a
+40-byte `WELC` back. Steps 3–6 and the certificate check (§3.5) were confirmed on
+2026-09-23, by `framectl pair` and `framectl info` from the Windows desktop. Both the
+pairing connection and a later `framedump_local` reconnect completed the full handshake.
 
 **Step 4 detail.** Open the box with nonce `"CurveCPK"(8 ASCII) ‖ cookieNonce(16)` =
 24 bytes, peer key `framePub`, our key `ephPriv`. Plaintext must be **128 bytes**:
@@ -172,6 +186,12 @@ If a real frame's issuer is missing from the list, that is a first-run blocker. 
 a distinct error ("This frame's certificate is signed by a key FrameAlt doesn't
 recognise") and offer an explicit, deliberately awkward trust-on-first-use override in
 settings. Never silently accept an unknown issuer.
+
+**Observed on a real frame (2026-09-23).** The certificate was 128 bytes, its subject
+matched `framePub`, and the signature verified. The issuer
+`aa335c65c736515bda80d5081c23f44b0ee9f4d75677e0a58699370ac7a1bd67` is in the embedded
+list, so the reference list covers this frame and no trust-on-first-use override was
+needed.
 
 ### 3.6 Session records
 
@@ -289,6 +309,12 @@ On success the frame has stored our identity public key. Persist
 `{peerId, issuer, host, port, senderName}`, close the pairing connection, and reconnect
 with `protocol = "framedump_local"`.
 
+**Observed on a real frame (2026-09-23).** Pairing with a real 10-digit friend code
+from the frame's "Add friend" screen succeeded on the first attempt. The frame's reply
+matched `expected` byte for byte, so §4.2 is correct on hardware as well as against the
+reference vectors. After that, a separate process reconnected from the persisted pairing
+with no new friend code.
+
 ### 4.4 Test vectors
 
 The reference repo carries 20 synthetic vectors in
@@ -383,6 +409,12 @@ wrap the whole run as a single length-delimited field 1.
 | 9 | uint→bool | permission: **manage photos** |
 
 Protocol version comes from the envelope, not a field.
+
+**Observed on a real frame (2026-09-23).** Fields 1–4 decoded to the name and placement
+set on the frame and an 800 × 1280 panel (width < height, i.e. the frame reports
+portrait). The envelope carried protocol version **18**. A newly paired client got
+`false` for all four permissions, so photo access always needs a kind 27 request that
+the owner approves on the frame (§8.6).
 
 ### Kind 3 — client information
 
@@ -594,7 +626,8 @@ Record these as-is; do not invent behaviour.
 6. **Frame storage limit** — surfaces only as error code 12 after the fact. There is no
    known query for free space.
 7. **Issuer list churn** — a frame manufactured after the reference list was captured
-   may present an unknown issuer. See §3.5.
+   may present an unknown issuer. See §3.5. The one frame tested so far (2026-09-23)
+   is covered by the list. That is one data point, not proof that the list is complete.
 
 ## 10. Porting checklist
 

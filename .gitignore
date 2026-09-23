@@ -7,3 +7,5 @@ local.properties
 captures/
 .kotlin/
 node_modules/
+# Real friend codes and other local secrets - never commit
+Friendcode.md

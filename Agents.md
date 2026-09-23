@@ -80,8 +80,9 @@ Nothing has touched real hardware yet. As of 2026-09-21 the frame was asleep and
 was attached, so all of this is outstanding:
 
 1. Install on a Pixel and confirm the app launches.
-2. `NsdManager` actually finds the frame (the desktop could not — Windows Firewall drops
-   inbound UDP 5353; Android has no equivalent problem, but this is unproven).
+2. `NsdManager` actually finds the frame. On 2026-09-22 (frame awake) `framectl discover`
+   and `probe` both found it from the desktop, and it answered `TELL` with `WELC`. So the
+   frame side of discovery works; Android's side is still unproven.
 3. Pairing with a real friend code succeeds.
 4. Connection details show the frame's **real** name, placement, resolution and protocol
    version.
