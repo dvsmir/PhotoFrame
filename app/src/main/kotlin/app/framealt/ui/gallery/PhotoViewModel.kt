@@ -8,7 +8,9 @@ import app.framealt.AppContainer
 import app.framealt.protocol.client.MediaItem
 import app.framealt.protocol.client.MediaType
 import app.framealt.ui.describeFailure
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -19,89 +21,128 @@ import kotlinx.coroutines.withContext
 /** Full-size photos are decoded no larger than this on their long side, to bound memory. */
 private const val MAX_PREVIEW_PIXELS = 2048
 
+/** Photos this many pages away from the one on screen are fetched ahead of a swipe. */
+private const val PREFETCH = 1
+
+/** Photos further away than this are dropped, so swiping through hundreds stays bounded. */
+private const val KEEP = 2
+
+private const val PHOTOS_ONLY = "Photo Frame can only show photos for now."
+
+/** One full-size photo, as far as it has got. */
+sealed interface PhotoLoad {
+    data object Loading : PhotoLoad
+
+    data class Loaded(val bitmap: Bitmap, val caption: String) : PhotoLoad
+
+    /** A video, or a fetch that failed; [text] says which, in UX §7 words. */
+    data class Unavailable(val text: String) : PhotoLoad
+}
+
 data class PhotoState(
     val frameName: String = "your frame",
-    val item: MediaItem? = null,
+    val items: List<MediaItem> = emptyList(),
+    /** The photo on screen. Actions apply to it. */
+    val currentId: Long,
+    val loads: Map<Long, PhotoLoad> = emptyMap(),
     val canManage: Boolean = false,
-    val loading: Boolean = true,
-    val bitmap: Bitmap? = null,
-    val caption: String = "",
-    /** Why there is no picture: a video, or a failed fetch. */
-    val unavailable: String? = null,
     val working: Boolean = false,
     val confirmingDelete: Boolean = false,
     val message: String? = null,
-    /** Set after a delete; the screen goes back to the grid. */
+    /** Set when the last photo was deleted; the screen goes back to the grid. */
     val gone: Boolean = false,
-)
+) {
+    val current: MediaItem? get() = items.firstOrNull { it.id == currentId }
+}
 
-class PhotoViewModel(private val container: AppContainer, private val id: Long) : ViewModel() {
+/**
+ * The swipeable preview: every item the gallery lists, in its order, starting at the one
+ * tapped. Only the photo on screen and its neighbours are held at full size.
+ */
+class PhotoViewModel(private val container: AppContainer, startId: Long) : ViewModel() {
 
-    private val _state = MutableStateFlow(PhotoState())
+    private val _state = MutableStateFlow(PhotoState(currentId = startId))
     val state: StateFlow<PhotoState> = _state.asStateFlow()
+
+    private val jobs = HashMap<Long, Job>()
 
     init {
         viewModelScope.launch {
-            container.gallery.items.collect { items -> _state.update { it.copy(item = items.firstOrNull { i -> i.id == id }) } }
+            container.gallery.items.collect { items ->
+                _state.update { it.copy(items = items, gone = items.isEmpty()) }
+            }
         }
         viewModelScope.launch {
             container.frameStore.frame.collect { frame ->
                 _state.update { it.copy(frameName = frame?.displayName ?: "your frame", canManage = frame?.canManage == true) }
             }
         }
-        load()
     }
 
-    private fun load() {
-        viewModelScope.launch {
-            try {
+    /** Called when a page settles: make it current, fetch it and its neighbours, drop the rest. */
+    fun show(id: Long) {
+        _state.update { it.copy(currentId = id) }
+        val items = _state.value.items
+        val index = items.indexOfFirst { it.id == id }
+        if (index < 0) return
+
+        // The one on screen first: the frame answers one request at a time.
+        val wanted = (index - PREFETCH..index + PREFETCH).mapNotNull { items.getOrNull(it)?.id }
+        (listOf(id) + wanted.filter { it != id }).forEach(::load)
+
+        val keep = (index - KEEP..index + KEEP).mapNotNull { items.getOrNull(it)?.id }.toSet()
+        jobs.keys.filterNot { it in keep }.forEach { jobs.remove(it)?.cancel() }
+        _state.update { state -> state.copy(loads = state.loads.filterKeys { it in keep }) }
+    }
+
+    private fun load(id: Long) {
+        if (id in _state.value.loads || jobs[id]?.isActive == true) return
+        _state.update { it.copy(loads = it.loads + (id to PhotoLoad.Loading)) }
+        jobs[id] = viewModelScope.launch {
+            val result = try {
                 val fetched = container.gallery.fetchFull(id)
                 val bitmap = withContext(Dispatchers.Default) { decodeBounded(fetched.bytes) }
-                _state.update {
-                    it.copy(
-                        loading = false,
-                        bitmap = bitmap,
-                        caption = fetched.caption,
-                        unavailable = if (bitmap == null) "Photo Frame can only show photos for now." else null,
-                    )
-                }
+                if (bitmap == null) PhotoLoad.Unavailable(PHOTOS_ONLY) else PhotoLoad.Loaded(bitmap, fetched.caption)
+            } catch (failure: CancellationException) {
+                throw failure
             } catch (failure: Exception) {
-                val video = _state.value.item?.type != MediaType.PHOTO
-                _state.update {
-                    it.copy(
-                        loading = false,
-                        unavailable = if (video) "Photo Frame can only show photos for now." else describe(failure),
-                    )
-                }
+                val item = _state.value.items.firstOrNull { it.id == id }
+                PhotoLoad.Unavailable(if (item?.type != MediaType.PHOTO) PHOTOS_ONLY else describe(failure))
+            }
+            _state.update { state ->
+                // Dropped while it was loading: it has left the window, so keep it out.
+                if (id in state.loads) state.copy(loads = state.loads + (id to result)) else state
             }
         }
     }
 
-    fun displayNow() = act("Showing it on ${_state.value.frameName} now.") { container.gallery.displayNow(id) }
+    fun displayNow() = act("Showing it on ${_state.value.frameName} now.") { container.gallery.displayNow(it) }
 
     fun setVisible(visible: Boolean) = act(if (visible) "Back in the slideshow." else "Hidden from the slideshow.") {
-        container.gallery.setVisibility(setOf(id), visible)
+        container.gallery.setVisibility(setOf(it), visible)
     }
 
     fun askDelete() = _state.update { it.copy(confirmingDelete = true) }
 
     fun dismissDelete() = _state.update { it.copy(confirmingDelete = false) }
 
+    /** Deletes the photo on screen; the pager then shows its neighbour. */
     fun confirmDelete() {
         _state.update { it.copy(confirmingDelete = false) }
-        act(null) {
+        act("Deleted.") { id ->
             container.gallery.delete(setOf(id))
-            _state.update { it.copy(gone = true) }
+            _state.update { state -> state.copy(loads = state.loads - id) }
         }
     }
 
-    private fun act(done: String?, action: suspend () -> Unit) {
+    private fun act(done: String, action: suspend (Long) -> Unit) {
         if (_state.value.working) return
+        val id = _state.value.currentId
         _state.update { it.copy(working = true) }
         viewModelScope.launch {
             try {
-                action()
-                if (done != null) _state.update { it.copy(message = done) }
+                action(id)
+                _state.update { it.copy(message = done) }
             } catch (failure: Exception) {
                 _state.update { it.copy(message = describe(failure)) }
             } finally {

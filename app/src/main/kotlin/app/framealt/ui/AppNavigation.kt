@@ -166,6 +166,7 @@ fun AppNavigation(container: AppContainer, reviewRequest: Int = 0, modifier: Mod
                 state = state,
                 actions = PhotoActions(
                     onBack = { navController.popBackStack() },
+                    onShow = model::show,
                     onDisplayNow = model::displayNow,
                     onSetVisible = model::setVisible,
                     onAskDelete = model::askDelete,
