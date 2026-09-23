@@ -160,14 +160,12 @@ fun AppNavigation(container: AppContainer, reviewRequest: Int = 0, modifier: Mod
             arguments = listOf(navArgument("id") { type = NavType.LongType }),
         ) { entry ->
             val id = entry.arguments?.getLong("id") ?: return@composable
-            val context = LocalContext.current
             val model: PhotoViewModel = viewModel { PhotoViewModel(container, id) }
             val state by model.state.collectAsState()
             PhotoScreen(
                 state = state,
                 actions = PhotoActions(
                     onBack = { navController.popBackStack() },
-                    onSave = { model.save(context) },
                     onDisplayNow = model::displayNow,
                     onSetVisible = model::setVisible,
                     onAskDelete = model::askDelete,

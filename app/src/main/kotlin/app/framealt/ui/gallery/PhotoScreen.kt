@@ -4,15 +4,13 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.AlertDialog
@@ -37,6 +35,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import java.time.Instant
 import java.time.ZoneId
@@ -44,7 +43,6 @@ import java.time.format.DateTimeFormatter
 
 class PhotoActions(
     val onBack: () -> Unit,
-    val onSave: () -> Unit,
     val onDisplayNow: () -> Unit,
     val onSetVisible: (Boolean) -> Unit,
     val onAskDelete: () -> Unit,
@@ -53,7 +51,12 @@ class PhotoActions(
     val onMessageShown: () -> Unit,
 )
 
-@OptIn(ExperimentalMaterial3Api::class, androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+/**
+ * One photo from the frame. Nothing scrolls: the details and actions take the height they
+ * need, and the photo is scaled to fit whatever is left, so every action is always on screen
+ * whatever the photo's shape or the phone's orientation.
+ */
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun PhotoScreen(state: PhotoState, actions: PhotoActions) {
     val snackbar = remember { SnackbarHostState() }
@@ -79,13 +82,14 @@ fun PhotoScreen(state: PhotoState, actions: PhotoActions) {
             Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .verticalScroll(rememberScrollState())
                 .padding(horizontal = 16.dp),
         ) {
+            // Takes all the height the details below leave over; Fit keeps the whole photo
+            // visible inside it at its own aspect ratio.
             Box(
                 Modifier
-                    .fillMaxWidth()
-                    .aspectRatio(state.bitmap?.let { it.width.toFloat() / it.height } ?: 1f),
+                    .weight(1f)
+                    .fillMaxWidth(),
                 contentAlignment = Alignment.Center,
             ) {
                 when {
@@ -102,25 +106,25 @@ fun PhotoScreen(state: PhotoState, actions: PhotoActions) {
 
             Spacer(Modifier.height(12.dp))
             if (state.caption.isNotBlank()) {
-                Text(state.caption, style = MaterialTheme.typography.titleMedium)
-                Spacer(Modifier.height(4.dp))
+                Text(
+                    state.caption,
+                    style = MaterialTheme.typography.titleMedium,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
             }
             state.item?.let { item ->
-                Text("Taken ${date(item.capturedAtMillis)}", style = MaterialTheme.typography.bodyMedium)
-                Text("Received ${date(item.receivedAtMillis)}", style = MaterialTheme.typography.bodyMedium)
-                if (!item.visible) {
-                    Text(
-                        "Hidden from the slideshow",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
+                val hidden = if (item.visible) "" else " · Hidden from the slideshow"
+                Text(
+                    "Taken ${date(item.capturedAtMillis)} · Received ${date(item.receivedAtMillis)}$hidden",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
 
-            Spacer(Modifier.height(16.dp))
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedButton(onClick = actions.onSave, enabled = state.bitmap != null) { Text("Save to phone") }
-                if (state.canManage && state.item != null) {
+            if (state.canManage && state.item != null) {
+                Spacer(Modifier.height(12.dp))
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedButton(onClick = actions.onDisplayNow, enabled = !state.working) { Text("Show on frame now") }
                     OutlinedButton(onClick = { actions.onSetVisible(!state.item.visible) }, enabled = !state.working) {
                         Text(if (state.item.visible) "Hide" else "Show")
@@ -132,7 +136,7 @@ fun PhotoScreen(state: PhotoState, actions: PhotoActions) {
                     ) { Text("Delete") }
                 }
             }
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(16.dp))
         }
     }
 

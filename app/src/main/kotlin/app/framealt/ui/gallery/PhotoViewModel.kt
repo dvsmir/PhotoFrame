@@ -1,15 +1,10 @@
 package app.framealt.ui.gallery
 
-import android.content.ContentValues
-import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.os.Environment
-import android.provider.MediaStore
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.framealt.AppContainer
-import app.framealt.protocol.client.MediaDownload
 import app.framealt.protocol.client.MediaItem
 import app.framealt.protocol.client.MediaType
 import app.framealt.ui.describeFailure
@@ -45,9 +40,6 @@ class PhotoViewModel(private val container: AppContainer, private val id: Long) 
     private val _state = MutableStateFlow(PhotoState())
     val state: StateFlow<PhotoState> = _state.asStateFlow()
 
-    /** The original bytes, kept for Save to phone. */
-    private var download: MediaDownload? = null
-
     init {
         viewModelScope.launch {
             container.gallery.items.collect { items -> _state.update { it.copy(item = items.firstOrNull { i -> i.id == id }) } }
@@ -64,7 +56,6 @@ class PhotoViewModel(private val container: AppContainer, private val id: Long) 
         viewModelScope.launch {
             try {
                 val fetched = container.gallery.fetchFull(id)
-                download = fetched
                 val bitmap = withContext(Dispatchers.Default) { decodeBounded(fetched.bytes) }
                 _state.update {
                     it.copy(
@@ -83,29 +74,6 @@ class PhotoViewModel(private val container: AppContainer, private val id: Long) 
                     )
                 }
             }
-        }
-    }
-
-    /** Writes the frame's original to `Pictures/FrameAlt` through MediaStore; no permission needed. */
-    fun save(context: Context) {
-        val original = download ?: return
-        viewModelScope.launch {
-            val saved = withContext(Dispatchers.IO) {
-                runCatching {
-                    val extension = original.extension.ifBlank { "webp" }.lowercase()
-                    val values = ContentValues().apply {
-                        put(MediaStore.Images.Media.DISPLAY_NAME, "frame-${java.lang.Long.toHexString(id)}.$extension")
-                        put(MediaStore.Images.Media.MIME_TYPE, mimeFor(extension))
-                        put(MediaStore.Images.Media.RELATIVE_PATH, "${Environment.DIRECTORY_PICTURES}/Photo Frame")
-                        put(MediaStore.Images.Media.IS_PENDING, 1)
-                    }
-                    val resolver = context.contentResolver
-                    val uri = checkNotNull(resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values))
-                    resolver.openOutputStream(uri).use { out -> checkNotNull(out).write(original.bytes) }
-                    resolver.update(uri, ContentValues().apply { put(MediaStore.Images.Media.IS_PENDING, 0) }, null, null)
-                }.isSuccess
-            }
-            _state.update { it.copy(message = if (saved) "Saved to Pictures/Photo Frame." else "Couldn't save the photo to this phone.") }
         }
     }
 
@@ -155,11 +123,4 @@ private fun decodeBounded(bytes: ByteArray): Bitmap? {
     var sample = 1
     while (maxOf(bounds.outWidth, bounds.outHeight) / (sample * 2) >= MAX_PREVIEW_PIXELS) sample *= 2
     return BitmapFactory.decodeByteArray(bytes, 0, bytes.size, BitmapFactory.Options().apply { inSampleSize = sample })
-}
-
-private fun mimeFor(extension: String) = when (extension) {
-    "jpg", "jpeg" -> "image/jpeg"
-    "png" -> "image/png"
-    "heic" -> "image/heic"
-    else -> "image/webp"
 }

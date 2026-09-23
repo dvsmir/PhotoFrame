@@ -105,7 +105,8 @@ all 20 arrive. Repeat with the app force-stopped beforehand.
   timeout states.
 - Media list, thumbnail grid (kind 23 at 400×400), bounded memory cache, badges for
   video/greeting, header counts, pull to refresh.
-- Photo preview with full-size fetch and Save to phone via MediaStore.
+- Photo preview with full-size fetch, all actions on screen without scrolling. (Save to
+  phone was built, then removed on 2026-09-23.)
 - Protocol < 13 fallback copy.
 - **Managing** (D2, revised 2026-09-23): kinds 33/34/35 in `:protocol` with mock-frame
   tests; multi-select with Delete / Hide / Show; preview actions; "Select photos sent

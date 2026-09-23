@@ -214,7 +214,7 @@ version.
 **Gallery**
 15. Request photo access → approve on the frame → gallery populates.
 16. Thumbnail grid scrolls smoothly at ~200 items; memory stays bounded.
-17. Open a photo → full-size loads → save to phone works.
+17. Open a photo → full-size loads, and every action is on screen without scrolling.
 18. Deny/ignore the access request → the timeout copy appears and nothing is stuck.
 
 **Recovery**
