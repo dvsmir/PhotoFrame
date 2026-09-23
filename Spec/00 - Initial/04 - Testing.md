@@ -248,6 +248,20 @@ correctly needs a look at the frame, and is marked as such.
 | 13 | partly | Portrait 3000 × 4000 and a 12000 × 2000 panorama both prepared and arrived. Earlier: a JPEG with EXIF orientation 6 and a transparent PNG. HEIC and a Motion Photo not yet tried; that needs real camera photos. Orientation and panorama fit need a look at the frame. |
 | 14 | ✅ badge | Reopening a folder already sent shows "Already sent" on those tiles and "2 of these were sent before." The pipeline is deterministic: the same source gives the same content ID. What the frame does on a re-send is still §6 question 1. |
 
+### 8.2 Results — Phase 4 share sheet, 2026-09-23
+
+Pixel 6a, Android 17. Google Photos → a device folder of 20 labelled JPEGs → Select → Share
+→ Next → FrameAlt, driven over adb. The debug build's `READ_MEDIA_IMAGES` was revoked
+first, so only the share's own grant could make the photos readable.
+
+| Run | Result |
+|---|---|
+| FrameAlt running | ✅ 20 received (all images), prepared in 3.3 s. After Send, Google Photos was back in front with "20 photos queued for …". The frame confirmed 20/20 in 11.3 s while FrameAlt was in the background. |
+| FrameAlt force-stopped first | ✅ The share started it cold. 20 prepared in 3.6 s, back in Google Photos after Send, 20/20 confirmed in 12.1 s. |
+
+Not yet run on the device: a mixed share (photos plus a PDF; the classification is
+unit-tested in `SharedItemsTest`), and sharing before any frame is paired.
+
 ## 9. CI
 
 GitHub Actions on push:

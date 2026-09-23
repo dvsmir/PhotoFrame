@@ -36,6 +36,12 @@ data class ReviewState(
     val sending: Boolean = false,
     /** Set once the batch is queued; the screen navigates away. */
     val done: Boolean = false,
+    /** How many photos went into the queue, for the "queued for <frame>" confirmation. */
+    val queued: Int = 0,
+    /** A share can carry more than photos; this many items were not images and were dropped. */
+    val skippedNonPhotos: Int = 0,
+    /** Everything that was shared, photos or not, for "4 of 6 items were photos". */
+    val offered: Int = 0,
 ) {
     val usable: List<ReviewPhoto.Ready> get() = photos.filterIsInstance<ReviewPhoto.Ready>()
     val failed: List<ReviewPhoto.Failed> get() = photos.filterIsInstance<ReviewPhoto.Failed>()
@@ -46,26 +52,32 @@ data class ReviewState(
 }
 
 /**
- * Prepares the picked photos right away, one at a time, while the picker's URI grant is
- * alive. Preparing before Send is what lets the screen say "Already sent": the content ID is
+ * Prepares the picked or shared photos right away, one at a time, while the URI grant from
+ * the picker or the share sheet is alive. Preparing before Send is what lets the screen say "Already sent": the content ID is
  * a hash of the prepared bytes. The caption and fit switch travel as metadata and do not
  * change those bytes, so nothing has to be redone when they change.
  */
-class ReviewViewModel(private val container: AppContainer) : ViewModel() {
+class ReviewViewModel(
+    private val container: AppContainer,
+    uris: List<Uri>,
+    skippedNonPhotos: Int = 0,
+) : ViewModel() {
 
     private val _state = MutableStateFlow(ReviewState())
     val state: StateFlow<ReviewState> = _state.asStateFlow()
 
     init {
-        val uris = container.pendingPicks.distinct()
-        container.pendingPicks = emptyList()
-        _state.value = ReviewState(photos = uris.map { ReviewPhoto.Preparing(it) })
+        _state.value = ReviewState(
+            photos = uris.distinct().map { ReviewPhoto.Preparing(it) },
+            skippedNonPhotos = skippedNonPhotos,
+            offered = uris.distinct().size + skippedNonPhotos,
+        )
 
         viewModelScope.launch {
             val frame = container.frameStore.current()
             val fit = container.settings.fitByDefault.first()
             _state.update { it.copy(frameName = frame?.displayName ?: "your frame", fit = fit) }
-            prepareAll(uris, frame?.let { PixelSize(it.width, it.height) } ?: FALLBACK_PANEL, frame?.peerId)
+            prepareAll(uris.distinct(), frame?.let { PixelSize(it.width, it.height) } ?: FALLBACK_PANEL, frame?.peerId)
         }
     }
 
@@ -126,7 +138,7 @@ class ReviewViewModel(private val container: AppContainer) : ViewModel() {
                 caption = current.caption.trim(),
                 fit = current.fit,
             )
-            _state.update { it.copy(done = true) }
+            _state.update { it.copy(done = true, queued = current.usable.size) }
         }
     }
 

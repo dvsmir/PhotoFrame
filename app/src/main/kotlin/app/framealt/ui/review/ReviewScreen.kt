@@ -119,6 +119,14 @@ private fun Options(state: ReviewState, onCaptionChange: (String) -> Unit, onFit
             Switch(checked = state.fit, onCheckedChange = onFitChange)
         }
 
+        if (state.skippedNonPhotos > 0) {
+            Spacer(Modifier.height(12.dp))
+            Text(
+                "${state.offered - state.skippedNonPhotos} of ${state.offered} items were photos; the rest were skipped.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
         if (state.duplicateCount > 0) {
             Spacer(Modifier.height(12.dp))
             Text(

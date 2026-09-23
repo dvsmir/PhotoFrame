@@ -421,6 +421,11 @@ task. The grant does **not** survive process death, so a queue holding only
 `content://` URIs would break exactly in the case D7 exists to fix. Hence §6 step
 ordering: prepare and copy first, enqueue second.
 
+**As built (Phase 4).** The grant belongs to `ShareActivity`, and preparation happens inside
+it, including after a detour through pairing, so it never outlives the grant. Verified with
+the debug build's `READ_MEDIA_IMAGES` revoked, so the app could read the shared photos
+*only* through the grant.
+
 ### 8.6 Backup exclusion
 
 Set `android:dataExtractionRules` and `android:fullBackupContent` to exclude the

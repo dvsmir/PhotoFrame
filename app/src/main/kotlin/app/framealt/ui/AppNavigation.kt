@@ -94,7 +94,11 @@ fun AppNavigation(container: AppContainer, reviewRequest: Int = 0, modifier: Mod
         }
 
         composable(Routes.REVIEW) {
-            val model: ReviewViewModel = viewModel { ReviewViewModel(container) }
+            val model: ReviewViewModel = viewModel {
+                val picks = container.pendingPicks
+                container.pendingPicks = emptyList()
+                ReviewViewModel(container, picks)
+            }
             val state by model.state.collectAsState()
             // Asked once, at the moment it becomes relevant. Denial changes nothing but the
             // progress notification, so the send goes ahead either way.
