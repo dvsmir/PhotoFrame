@@ -159,7 +159,7 @@ private fun pair(state: State, arguments: Arguments) {
         if (failure.message?.contains("unrecognised frame certificate issuer") == true) {
             fail(
                 """
-                |This frame's certificate is signed by a key FrameAlt does not recognise.
+                |This frame's certificate is signed by a key Photo Frame does not recognise.
                 |
                 |That means either the frame is newer than the built-in issuer list, or the
                 |device answering is not a Frameo frame. To see the issuer, re-run with:
@@ -410,7 +410,7 @@ private class Arguments(private val tokens: List<String>) {
 private fun usage(): Nothing {
     println(
         """
-        |framectl - drive a Frameo frame from the terminal, through the FrameAlt protocol library.
+        |framectl - drive a Frameo frame from the terminal, through the Photo Frame protocol library.
         |
         |  discover [--seconds N]                       find frames via mDNS
         |  probe [--hosts a,b] [--ports 1-65535]        find frames by handshake, when mDNS
@@ -424,7 +424,7 @@ private fun usage(): Nothing {
         |  get <media-id> [--size N] [--out F]          download one item
         |  forget                                       drop the saved pairing
         |
-        |State lives in ~/.framealt/framectl.properties and contains a private pairing key.
+        |State lives in ~/.photoframe/framectl.properties and contains a private pairing key.
         """.trimMargin(),
     )
     exitProcess(1)

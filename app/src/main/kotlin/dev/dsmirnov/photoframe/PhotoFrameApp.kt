@@ -21,7 +21,7 @@ import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 
-class FrameAltApp : Application() {
+class PhotoFrameApp : Application() {
 
     lateinit var container: AppContainer
         private set

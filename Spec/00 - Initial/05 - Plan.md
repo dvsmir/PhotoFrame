@@ -95,7 +95,7 @@ Answer §6 question 1 (does the frame de-duplicate?) and record it.
 - Not-paired share path holds the batch through pairing.
 - Preparation happens before the activity finishes, while the URI grant is alive.
 
-**Gate** — Google Photos → share 20 photos → FrameAlt → Send → return to Google Photos,
+**Gate** — Google Photos → share 20 photos → Photo Frame → Send → return to Google Photos,
 all 20 arrive. Repeat with the app force-stopped beforehand.
 
 ## Phase 5 — Gallery

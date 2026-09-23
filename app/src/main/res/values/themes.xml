@@ -5,7 +5,7 @@
       DeviceDefault.DayNight follows the system light/dark setting, so there is no flash of
       the wrong background on launch.
     -->
-    <style name="Theme.FrameAlt" parent="android:Theme.DeviceDefault.DayNight">
+    <style name="Theme.PhotoFrame" parent="android:Theme.DeviceDefault.DayNight">
         <item name="android:windowActionBar">false</item>
         <item name="android:windowNoTitle">true</item>
     </style>

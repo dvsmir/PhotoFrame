@@ -15,7 +15,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
-private val Context.frameDataStore by preferencesDataStore(name = "framealt_frames")
+private val Context.frameDataStore by preferencesDataStore(name = "photoframe_frames")
 
 /**
  * The paired frame, and the last thing it told us about itself.

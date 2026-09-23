@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
-private val Context.settingsDataStore by preferencesDataStore(name = "framealt_settings")
+private val Context.settingsDataStore by preferencesDataStore(name = "photoframe_settings")
 
 /** User preferences. Nothing here is secret. */
 class Settings(private val context: Context) {

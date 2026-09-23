@@ -5,7 +5,7 @@ import android.content.ContentUris
 import android.content.Intent
 import android.os.Bundle
 import android.provider.MediaStore
-import dev.dsmirnov.photoframe.FrameAltApp
+import dev.dsmirnov.photoframe.PhotoFrameApp
 import dev.dsmirnov.photoframe.ui.MainActivity
 
 /**
@@ -15,7 +15,7 @@ import dev.dsmirnov.photoframe.ui.MainActivity
  * ```
  * adb shell pm grant dev.dsmirnov.photoframe.debug android.permission.READ_MEDIA_IMAGES
  * adb shell am start -n dev.dsmirnov.photoframe.debug/dev.dsmirnov.photoframe.debug.DebugPickActivity \
- *     --es dir Pictures/FrameAltBatch/
+ *     --es dir Pictures/PhotoFrameBatch/
  * ```
  */
 class DebugPickActivity : Activity() {
@@ -37,7 +37,7 @@ class DebugPickActivity : Activity() {
             }
         }.orEmpty()
 
-        val container = (application as FrameAltApp).container
+        val container = (application as PhotoFrameApp).container
         container.eventLog.info("debug", "picked ${uris.size} photo(s) from $dir")
         if (uris.isNotEmpty()) {
             container.pendingPicks = uris

@@ -34,12 +34,12 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import dev.dsmirnov.photoframe.AppContainer
-import dev.dsmirnov.photoframe.FrameAltApp
+import dev.dsmirnov.photoframe.PhotoFrameApp
 import dev.dsmirnov.photoframe.ui.connect.ConnectScreen
 import dev.dsmirnov.photoframe.ui.connect.ConnectViewModel
 import dev.dsmirnov.photoframe.ui.review.ReviewScreen
 import dev.dsmirnov.photoframe.ui.review.ReviewViewModel
-import dev.dsmirnov.photoframe.ui.theme.FrameAltTheme
+import dev.dsmirnov.photoframe.ui.theme.PhotoFrameTheme
 
 private const val TAG = "share"
 
@@ -67,12 +67,12 @@ class ShareActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
-        val container = (application as FrameAltApp).container
+        val container = (application as PhotoFrameApp).container
         val shared = readShare(intent, contentResolver)
         container.eventLog.info(TAG, "received ${shared.offered} item(s), ${shared.photos.size} of them image(s)")
 
         setContent {
-            FrameAltTheme {
+            PhotoFrameTheme {
                 ShareFlow(container, shared, onFinished = ::finish)
             }
         }

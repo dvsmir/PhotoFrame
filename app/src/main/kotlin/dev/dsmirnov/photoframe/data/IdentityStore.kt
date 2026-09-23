@@ -20,7 +20,7 @@ import javax.crypto.SecretKey
 import javax.crypto.spec.GCMParameterSpec
 import android.util.Base64
 
-private val Context.identityDataStore by preferencesDataStore(name = "framealt_identity")
+private val Context.identityDataStore by preferencesDataStore(name = "photoframe_identity")
 
 /**
  * Stores this client's long-term X25519 private key.
@@ -113,7 +113,7 @@ class IdentityStore(private val context: Context) {
     private companion object {
         val KEY_WRAPPED = stringPreferencesKey("identity.wrapped")
         const val ANDROID_KEYSTORE = "AndroidKeyStore"
-        const val ALIAS = "framealt.identity.wrapper"
+        const val ALIAS = "photoframe.identity.wrapper"
         const val TRANSFORMATION = "AES/GCM/NoPadding"
         const val GCM_TAG_BITS = 128
     }

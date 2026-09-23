@@ -1,4 +1,4 @@
-# FrameAlt Specification
+# Photo Frame Specification
 
 A personal Android app that sends photos to a Frameo digital photo frame over the local
 network — no account, no cloud, no subscription limits.

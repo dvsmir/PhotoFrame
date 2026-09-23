@@ -75,7 +75,7 @@ class State(private val file: File) {
 
     fun save() {
         file.parentFile?.mkdirs()
-        file.outputStream().use { properties.store(it, "FrameAlt framectl state - contains a private pairing key") }
+        file.outputStream().use { properties.store(it, "Photo Frame framectl state - contains a private pairing key") }
     }
 
     val path: String get() = file.absolutePath
@@ -90,6 +90,6 @@ class State(private val file: File) {
         private const val KEY_FRAME_NAME = "frame.name"
 
         fun default(): State =
-            State(File(System.getProperty("user.home"), ".framealt/framectl.properties"))
+            State(File(System.getProperty("user.home"), ".photoframe/framectl.properties"))
     }
 }

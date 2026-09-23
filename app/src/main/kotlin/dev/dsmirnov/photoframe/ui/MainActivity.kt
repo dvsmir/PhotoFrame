@@ -11,23 +11,23 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.ui.Modifier
 import dev.dsmirnov.photoframe.AppContainer
-import dev.dsmirnov.photoframe.FrameAltApp
-import dev.dsmirnov.photoframe.ui.theme.FrameAltTheme
+import dev.dsmirnov.photoframe.PhotoFrameApp
+import dev.dsmirnov.photoframe.ui.theme.PhotoFrameTheme
 
 class MainActivity : ComponentActivity() {
 
     /** Bumped each time something asks to open Review & Send with `pendingPicks`. */
     private val reviewRequests = mutableIntStateOf(0)
 
-    private val container: AppContainer get() = (application as FrameAltApp).container
+    private val container: AppContainer get() = (application as PhotoFrameApp).container
 
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         handle(intent)
         setContent {
-            FrameAltTheme {
-                FrameAltRoot(container, reviewRequests.intValue)
+            PhotoFrameTheme {
+                PhotoFrameRoot(container, reviewRequests.intValue)
             }
         }
     }
@@ -53,7 +53,7 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-private fun FrameAltRoot(container: AppContainer, reviewRequest: Int) {
+private fun PhotoFrameRoot(container: AppContainer, reviewRequest: Int) {
     Scaffold { padding ->
         AppNavigation(container, reviewRequest, Modifier.padding(padding))
     }

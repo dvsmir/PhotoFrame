@@ -1,5 +1,5 @@
 {
-  "name": "framealt-gen-vectors",
+  "name": "photoframe-gen-vectors",
   "private": true,
   "type": "module",
   "description": "Generates crypto test vectors for the protocol module from an independent NaCl implementation.",

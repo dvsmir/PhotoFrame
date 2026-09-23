@@ -18,7 +18,7 @@ import java.time.format.DateTimeFormatter
  * are redacted to their first eight hex characters by [redact].
  *
  * With [mirrorToLogcat] on (debug builds only) every event is also written to logcat under
- * `FrameAlt/<tag>`, so a device session can be followed from `adb logcat`.
+ * `PhotoFrame/<tag>`, so a device session can be followed from `adb logcat`.
  */
 class EventLog(
     private val capacity: Int = 200,
@@ -59,7 +59,7 @@ class EventLog(
                 Level.WARN -> Log.WARN
                 Level.ERROR -> Log.ERROR
             }
-            Log.println(priority, "FrameAlt/$tag", message)
+            Log.println(priority, "PhotoFrame/$tag", message)
         }
     }
 

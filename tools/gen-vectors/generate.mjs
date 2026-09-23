@@ -33,6 +33,8 @@ function bytes(n) {
   const out = new Uint8Array(n)
   let filled = 0
   while (filled < n) {
+    // The seed keeps the project's old working name on purpose: changing it would make a
+    // regeneration differ from the committed vectors.
     const block = createHash('sha256').update(`framealt-vector-${counter++}`).digest()
     const take = Math.min(block.length, n - filled)
     out.set(block.subarray(0, take), filled)

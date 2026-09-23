@@ -191,7 +191,7 @@ Checks, all mandatory:
      pairing. A change means a different or tampered frame — hard-fail, do not prompt.
 
 If a real frame's issuer is missing from the list, that is a first-run blocker. Surface
-a distinct error ("This frame's certificate is signed by a key FrameAlt doesn't
+a distinct error ("This frame's certificate is signed by a key Photo Frame doesn't
 recognise") and offer an explicit, deliberately awkward trust-on-first-use override in
 settings. Never silently accept an unknown issuer.
 

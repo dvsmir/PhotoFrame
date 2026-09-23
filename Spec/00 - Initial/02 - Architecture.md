@@ -1,6 +1,6 @@
 # Architecture
 
-How FrameAlt is put together: modules, crypto mapping, session handling, storage, the
+How Photo Frame is put together: modules, crypto mapping, session handling, storage, the
 image pipeline, the send queue, and the Android platform constraints that shape all of
 it.
 
@@ -16,7 +16,7 @@ ceremony: it is what lets the entire protocol be
 tested on a laptop JVM in milliseconds, with no emulator, no device, and no frame.
 
 ```
-FrameAlt/
+Photo Frame/
 ├── settings.gradle.kts
 ├── gradle/libs.versions.toml          version catalog
 ├── protocol/                          Kotlin/JVM library — NO Android dependencies
@@ -44,7 +44,7 @@ FrameAlt/
         │   ├── ui/        home (Home, frame card), details (Frame screen), connect,
         │   │              review (Review & Send), share (ShareActivity), gallery
         │   │              (grid, swipeable preview), diagnostics, theme
-        │   └── FrameAltApp.kt   the hand-rolled container
+        │   └── PhotoFrameApp.kt   the hand-rolled container
         ├── debug/     DebugPickActivity: drives the send flow over adb (debug builds only)
         └── test/      JVM tests: QueueDrainer, Sizing and EXIF dates, the Home
                        summary, share classification
@@ -238,7 +238,7 @@ data class SentEntity(val peerId: String, val contentId: Long, val sentAt: Long,
 `sent_ledger` powers the "you already sent this one" hint on the review screen (G5) and
 survives clearing the queue.
 
-**As built (Phase 3).** `queue_items` and `sent_ledger` are in Room (`framealt_send.db`,
+**As built (Phase 3).** `queue_items` and `sent_ledger` are in Room (`photoframe_send.db`,
 schema exported to `app/schemas/`). The `frames` table was not built. With one frame
 (D6), the pairing stays in its own DataStore file (`FrameStore`), as Phase 2 left it. Move
 it into Room when multiple frames arrive. `queue_items` also has a `frameErrorCode`
@@ -398,9 +398,9 @@ that a permission check is a single injectable gate, not a change threaded throu
 three layers.
 
 When the flip happens: request at the moment the user taps *Connect your frame* (not at
-launch), with a rationale naming the frame — "FrameAlt needs to find your photo frame on
+launch), with a rationale naming the frame — "Photo Frame needs to find your photo frame on
 this Wi-Fi network." On denial, fall back to manual `host:port` entry, which still needs
-the permission for the TCP connect, so the honest copy is "FrameAlt can't reach your
+the permission for the TCP connect, so the honest copy is "Photo Frame can't reach your
 frame without local network access."
 
 ### 8.2 Keeping traffic on Wi-Fi
@@ -518,7 +518,7 @@ subnet, frame asleep, permission missing) are otherwise invisible:
 **As built:** the log is `EventLog`, an in-memory ring of 200 events, redacted as it is
 written (peer IDs to 8 hex characters; never keys, friend codes or photo content). The
 screen is reached from the Frame screen's *Diagnostics log* (UX §3). **Debug builds also
-mirror every event to logcat** under the tag `FrameAlt/<area>` (`session`, `discovery`,
+mirror every event to logcat** under the tag `PhotoFrame/<area>` (`session`, `discovery`,
 `network`, `queue`, `review`, `share`, `gallery`, `debug`), so a device session can be
 followed with `adb logcat`. Release builds do not.
 

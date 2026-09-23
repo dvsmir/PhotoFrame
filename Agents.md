@@ -87,7 +87,7 @@ implementation this port is based on. It ships **no LICENSE file**, so:
 | 1 — Transport & mock frame | **done** — 54 tests green |
 | 2 — Pairing on a real frame | **done** — gate passed 2026-09-23 on a Pixel 6a (Android 17): mDNS discovery, pairing, real frame details, reconnect after force-stop |
 | 3 — Sending | **done** — gate passed 2026-09-23 on the Pixel 6a, scope narrowed by decision (`05 - Plan.md`, Phase 3 gate outcome): tests 5–10, 12, 13 and 14 pass, test 11 was not run and its expected behaviour is traced in `04 - Testing.md` §8.1, and HEIC and Motion Photo are out of scope for v1. `.\gradlew :app:testDebugUnitTest`: 27 JVM tests. Debug builds can drive the send flow over adb: `DebugPickActivity`, see its KDoc |
-| 4 — Share sheet | **done** — gate passed 2026-09-23: Google Photos → share 20 → FrameAlt → Send → back in Google Photos, 20/20 arrived, with FrameAlt running and again force-stopped (`04 - Testing.md` §8.2). Not yet run on the device: a mixed photo+PDF share (unit-tested) and sharing before pairing |
+| 4 — Share sheet | **done** — gate passed 2026-09-23: Google Photos → share 20 → Photo Frame → Send → back in Google Photos, 20/20 arrived, with Photo Frame running and again force-stopped (`04 - Testing.md` §8.2). Not yet run on the device: a mixed photo+PDF share (unit-tested) and sharing before pairing |
 | 5 — Gallery + managing | **built, gate mostly passed.** Scope revised 2026-09-23 (D2): the gallery also deletes, hides/shows and displays now. Tests 15 and 17 pass, and the build-time test photos were cleaned up with "Select photos sent from this phone" (`04 - Testing.md` §8.3). Open: 16 (not measured), 18 (deny/timeout), comparing the count with the official app, and 2 `framectl` test photos still on the frame. **Since then (2026-09-23):** named Photo Frame with a new icon; Home reduced to Add photos, On the frame and a "Frame info" card; a Frame screen with a local rename; a swipeable preview with no Save to phone; and a photos/videos filter. All of it is in the spec (Overview name note, UX §1–§3 and §6, Architecture §5.2, §10 and §11) |
 | 6 | not started |
 
@@ -109,12 +109,12 @@ frame asleep. What was learned is recorded in `01 - Protocol.md` (§2, §3.3, §
 kind 2).
 
 **Driving the phone from here.** Debug builds mirror the Diagnostics log to logcat
-under `FrameAlt/<tag>`. The debug package is `dev.dsmirnov.photoframe.debug`.
+under `PhotoFrame/<tag>`. The debug package is `dev.dsmirnov.photoframe.debug`.
 
 ```powershell
 adb install -r app\build\outputs\apk\debug\app-debug.apk
 adb shell am start -n dev.dsmirnov.photoframe.debug/dev.dsmirnov.photoframe.ui.MainActivity
-adb logcat -s "FrameAlt/session" "FrameAlt/discovery" "FrameAlt/network"
+adb logcat -s "PhotoFrame/session" "PhotoFrame/discovery" "PhotoFrame/network"
 ```
 
 Screenshots: use `adb exec-out screencap -p > s.png` from the Bash tool. Redirection in

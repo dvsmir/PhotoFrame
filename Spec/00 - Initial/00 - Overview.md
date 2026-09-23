@@ -1,20 +1,19 @@
-# FrameAlt — Overview & Scope
+# Photo Frame — Overview & Scope
 
 > Personal Android app that sends photos to a Frameo digital photo frame over the
 > local network, with no Frameo account, no cloud, and no subscription limits.
 
 Derived from [`Intent.md`](Intent.md).
 
-**Name (2026-09-23).** Users see the app as **Photo Frame**: the launcher label, the share
-sheet, and every sentence in the UI. The package, namespace and application ID are
+**Name.** The app is **Photo Frame**. Its package, namespace and application ID are
 `dev.dsmirnov.photoframe` (debug builds `dev.dsmirnov.photoframe.debug`); the protocol
 library is `dev.dsmirnov.photoframe.protocol` and the CLI `dev.dsmirnov.photoframe.framectl`.
-Until 2026-09-23 all of these were `app.framealt`. The move changed the application ID,
-so it installed as a new app that had to be paired again. "FrameAlt" remains the name of the
-project, the repository, some class names (`FrameAltApp`) and the logcat tag. Wherever
-these documents quote UI copy that says "FrameAlt", the app shows
-"Photo Frame". The icon is a wooden photo frame around a small landscape, as an adaptive
-icon with a monochrome layer for themed icons.
+The icon is a wooden photo frame around a small landscape, as an adaptive icon with a
+monochrome layer for themed icons.
+
+*History:* until 2026-09-23 the project's working name was "FrameAlt", with the package
+`app.framealt`. Commit messages from before then use it. Changing the application ID made
+the app install as a new one that had to be paired again.
 
 ---
 
@@ -37,7 +36,7 @@ this project: its protocol layer (~900 lines across `internal/protocol` and
 `internal/device`) is complete, tested against synthetic vectors, and proven against
 real frames on protocol version 18.
 
-FrameAlt is that capability as a native Android app — so photos go straight from the
+Photo Frame is that capability as a native Android app — so photos go straight from the
 phone that took them to the frame, in one share-sheet tap.
 
 ## 2. Confirmed product decisions
@@ -61,7 +60,7 @@ an implementation detail.
 - **G1** — Send an arbitrary number of photos to the frame in one action, with no
   account, no subscription, and no per-batch cap beyond the practical ones in §5.
 - **G2** — Sending from Google Photos (or any gallery app) is a share-sheet tap:
-  share → FrameAlt → Send. No export, no intermediate file, no desktop involved.
+  share → Photo Frame → Send. No export, no intermediate file, no desktop involved.
 - **G3** — A send that starts always finishes or reports why. Walking out of Wi-Fi
   range, locking the screen, or killing the app must not silently lose photos.
 - **G4** — First-run pairing is a guided flow that works from the frame's friend code
@@ -88,7 +87,7 @@ an implementation detail.
 
 ## 5. Hard limits inherited from the protocol
 
-These are not FrameAlt choices; they come from the wire format and the frame. Full
+These are not Photo Frame choices; they come from the wire format and the frame. Full
 detail in [`01 - Protocol.md`](01%20-%20Protocol.md).
 
 | Limit | Value | Where it bites |
@@ -110,7 +109,7 @@ detail in [`01 - Protocol.md`](01%20-%20Protocol.md).
 | `compileSdk` | 37 (Android 17) | Build against the OS the devices actually run. |
 | `targetSdk` | 36 initially, 37 as a tracked follow-up | See the local-network-permission trap in [`02 - Architecture.md`](02%20-%20Architecture.md) §8. Declaring `ACCESS_LOCAL_NETWORK` while targeting ≤36 is explicitly wrong. |
 | Language / UI | Kotlin, Jetpack Compose, Material 3 | — |
-| `applicationId` | `dev.dsmirnov.photoframe` (placeholder, trivially changed) | — |
+| `applicationId` | `dev.dsmirnov.photoframe` | Changing it makes a new app, which needs pairing again. |
 | Distribution | Debug/release APK installed over ADB or by direct download | See §8. |
 
 Pixel 6 leaves Google's support window in **October 2026**. It keeps working; it just
@@ -120,7 +119,7 @@ stops receiving OS updates. Nothing in this spec depends on that.
 
 1. From a cold install, pairing with the frame succeeds using only the friend code
    shown on the frame, with no manual IP entry, on a normal home Wi-Fi.
-2. Selecting 50 photos in Google Photos → Share → FrameAlt → Send puts all 50 on the
+2. Selecting 50 photos in Google Photos → Share → Photo Frame → Send puts all 50 on the
    frame, with a progress notification throughout and no user interaction after the
    Send tap.
 3. Locking the phone mid-send does not interrupt the send.
@@ -141,7 +140,7 @@ stops receiving OS updates. Nothing in this spec depends on that.
   rights reserved. We are re-implementing the protocol in Kotlin for personal use
   rather than copying or redistributing its code, and a wire protocol itself is not
   copyrightable. Do not vendor its Go source into this repository, do not publish
-  FrameAlt derived from it without sorting the licensing out first, and keep the
+  Photo Frame derived from it without sorting the licensing out first, and keep the
   reference clone outside the repo tree. The one artifact worth copying is
   `internal/protocol/testdata/pace.json` (20 synthetic PACE vectors); treat it as a test
   fixture, note its origin in the test file, or regenerate equivalents locally — see
@@ -154,7 +153,7 @@ stops receiving OS updates. Nothing in this spec depends on that.
   builds over ADB is unaffected. If you later hand the APK to family, the free *limited
   distribution* account type covers up to 20 devices without a government ID. Settle
   this before sharing beyond your own devices.
-- Frameo is a trademark of Frameo ApS. FrameAlt is an unaffiliated personal tool; do not
+- Frameo is a trademark of Frameo ApS. Photo Frame is an unaffiliated personal tool; do not
   use Frameo's name or branding in the app name, icon, or any listing.
 
 ## 9. Glossary

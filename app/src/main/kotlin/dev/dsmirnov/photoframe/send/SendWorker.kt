@@ -7,7 +7,7 @@ import android.content.pm.ServiceInfo
 import androidx.work.CoroutineWorker
 import androidx.work.ForegroundInfo
 import androidx.work.WorkerParameters
-import dev.dsmirnov.photoframe.FrameAltApp
+import dev.dsmirnov.photoframe.PhotoFrameApp
 import dev.dsmirnov.photoframe.data.QueueState
 import dev.dsmirnov.photoframe.device.NotPairedException
 import dev.dsmirnov.photoframe.protocol.ProtocolException
@@ -33,7 +33,7 @@ private const val NOTIFY_INTERVAL_MILLIS = 500L
  */
 class SendWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
 
-    private val container = (context.applicationContext as FrameAltApp).container
+    private val container = (context.applicationContext as PhotoFrameApp).container
     private val notifications = container.sendNotifications
     private val eventLog = container.eventLog
 
@@ -172,7 +172,7 @@ class SendWorker(context: Context, params: WorkerParameters) : CoroutineWorker(c
 /** The notification's Cancel action: stop sending and drop what has not gone yet. */
 class CancelSendReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
-        val container = (context.applicationContext as FrameAltApp).container
+        val container = (context.applicationContext as PhotoFrameApp).container
         val pending = goAsync()
         CoroutineScope(Dispatchers.IO).launch {
             try {

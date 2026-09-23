@@ -30,7 +30,7 @@ private val DarkScheme = darkColorScheme(
 )
 
 @Composable
-fun FrameAltTheme(
+fun PhotoFrameTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     content: @Composable () -> Unit,
 ) {

@@ -125,6 +125,6 @@ abstract class SendDatabase : RoomDatabase() {
 
     companion object {
         fun open(context: Context): SendDatabase =
-            Room.databaseBuilder(context, SendDatabase::class.java, "framealt_send.db").build()
+            Room.databaseBuilder(context, SendDatabase::class.java, "photoframe_send.db").build()
     }
 }

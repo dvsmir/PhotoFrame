@@ -26,7 +26,7 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "FrameAlt"
+rootProject.name = "PhotoFrame"
 
 // Plain Kotlin/JVM on purpose: the protocol must stay testable on a laptop JVM with no
 // emulator and no frame. See Spec/00 - Initial/02 - Architecture.md §1.
