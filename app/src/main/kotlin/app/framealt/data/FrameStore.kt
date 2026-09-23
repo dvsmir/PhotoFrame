@@ -36,12 +36,18 @@ data class StoredFrame(
     val canView: Boolean = false,
     val canManage: Boolean = false,
     val lastSeenAtMillis: Long = 0,
+    /**
+     * What the user calls the frame, kept only on this phone. The frame's own [name] is set on
+     * the frame itself and there is no known protocol message to change it, so renaming is
+     * local. Blank means "use the frame's name".
+     */
+    val alias: String = "",
 ) {
     val pairing: FramePairing get() = FramePairing(peerId, issuer)
     val endpoint: FrameEndpoint get() = FrameEndpoint(host, port)
 
     /** A name to show before the frame has ever been reached. */
-    val displayName: String get() = name.ifBlank { "Your frame" }
+    val displayName: String get() = alias.ifBlank { name.ifBlank { "Your frame" } }
 
     companion object {
         /** The reference client's fallback panel size, used until a frame reports its own. */
@@ -99,6 +105,15 @@ class FrameStore(private val context: Context) {
         }
     }
 
+    /** Sets the local name for the frame; blank goes back to the name the frame reports. */
+    suspend fun setAlias(value: String) {
+        context.frameDataStore.edit { prefs ->
+            if (prefs[PEER_ID] == null) return@edit
+            val trimmed = value.trim().take(MAX_ALIAS)
+            if (trimmed.isEmpty()) prefs.remove(ALIAS) else prefs[ALIAS] = trimmed
+        }
+    }
+
     suspend fun forget() {
         context.frameDataStore.edit { it.clear() }
     }
@@ -119,6 +134,7 @@ class FrameStore(private val context: Context) {
             canView = this[CAN_VIEW] ?: false,
             canManage = this[CAN_MANAGE] ?: false,
             lastSeenAtMillis = this[LAST_SEEN] ?: 0,
+            alias = this[ALIAS].orEmpty(),
         )
     }
 
@@ -135,5 +151,7 @@ class FrameStore(private val context: Context) {
         val CAN_VIEW = booleanPreferencesKey("frame.canView")
         val CAN_MANAGE = booleanPreferencesKey("frame.canManage")
         val LAST_SEEN = longPreferencesKey("frame.lastSeenAt")
+        val ALIAS = stringPreferencesKey("frame.alias")
+        const val MAX_ALIAS = 60
     }
 }

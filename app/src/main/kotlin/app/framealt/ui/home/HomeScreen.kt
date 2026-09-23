@@ -14,14 +14,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
@@ -111,38 +109,13 @@ private fun Paired(modifier: Modifier, state: HomeState, frame: StoredFrame, act
     }
 }
 
-/** The frame's state at a glance; tapping it opens everything else about the frame. */
+/** The frame's name and status, nothing more; tapping it opens everything else (UX §3). */
 @Composable
 private fun FrameCard(state: HomeState, frame: StoredFrame, onOpen: () -> Unit) {
     Card(onClick = onOpen, modifier = Modifier.fillMaxWidth()) {
-        Column(Modifier.padding(16.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Column(Modifier.weight(1f)) {
-                    Text(frame.displayName, style = MaterialTheme.typography.titleLarge)
-                    if (frame.placement.isNotBlank()) {
-                        Text(frame.placement, style = MaterialTheme.typography.bodyMedium)
-                    }
-                }
-                StatusChip(state.status)
-                Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = "Frame details")
-            }
-            val line = activityLine(state, frame.displayName)
-            if (line != null) {
-                Spacer(Modifier.height(8.dp))
-                Text(
-                    line,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = if (state.activity.failed.isNotEmpty() && !state.activity.sendingNow && state.activity.waiting == 0) {
-                        MaterialTheme.colorScheme.error
-                    } else {
-                        MaterialTheme.colorScheme.onSurfaceVariant
-                    },
-                )
-            }
-            if (state.activity.sendingNow) {
-                Spacer(Modifier.height(8.dp))
-                LinearProgressIndicator(progress = { state.activity.progress() }, modifier = Modifier.fillMaxWidth())
-            }
+        Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text(frame.displayName, style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f))
+            StatusChip(state.status)
         }
     }
 }

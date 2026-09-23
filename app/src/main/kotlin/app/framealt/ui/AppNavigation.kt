@@ -190,6 +190,7 @@ fun AppNavigation(container: AppContainer, reviewRequest: Int = 0, modifier: Mod
                     onRetry = model::retry,
                     onRemove = model::remove,
                     onOpenDiagnostics = { navController.navigate(Routes.DIAGNOSTICS) },
+                    onRename = model::rename,
                     onForget = {
                         model.forget()
                         navController.popBackStack(Routes.HOME, inclusive = false)

@@ -53,23 +53,6 @@ fun StatusChip(status: FrameStatus) {
     )
 }
 
-/**
- * The one activity line on Home's frame card, most pressing first (UX §3). Null when there
- * is nothing to say.
- */
-fun activityLine(state: HomeState, frameName: String): String? {
-    val activity = state.activity
-    return when {
-        activity.sendingNow -> "Sending ${minOf(activity.done + 1, activity.total)} of ${activity.total}"
-        activity.waiting > 0 -> waitingLine(activity.waiting, state.status, frameName)
-        activity.failed.isNotEmpty() ->
-            (if (activity.failed.size == 1) "1 photo" else "${activity.failed.size} photos") +
-                " couldn't be sent. Tap for details."
-        activity.recent.isNotEmpty() -> recentLine(activity.recent.first())
-        else -> null
-    }
-}
-
 /** Byte progress of the batch in flight, 0..1. */
 fun ActivityState.progress(): Float = if (totalBytes == 0L) 0f else sentBytes.toFloat() / totalBytes
 

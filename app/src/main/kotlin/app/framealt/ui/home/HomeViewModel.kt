@@ -108,6 +108,11 @@ class HomeViewModel(private val container: AppContainer) : ViewModel() {
         viewModelScope.launch { container.sendQueue.remove(item.id) }
     }
 
+    /** Renames the frame on this phone only; blank goes back to the frame's own name. */
+    fun rename(value: String) {
+        viewModelScope.launch { container.frameStore.setAlias(value) }
+    }
+
     /** "Send now" on waiting photos: skip whatever backoff the queue is sitting in. */
     fun sendNow() {
         viewModelScope.launch { container.sendQueue.kick() }

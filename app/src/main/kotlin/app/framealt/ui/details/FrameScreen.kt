@@ -12,6 +12,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
@@ -21,6 +22,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -52,6 +54,7 @@ class FrameActions(
     val onRemove: (QueueItem) -> Unit,
     val onOpenDiagnostics: () -> Unit,
     val onForget: () -> Unit,
+    val onRename: (String) -> Unit,
 )
 
 /**
@@ -62,6 +65,7 @@ class FrameActions(
 @Composable
 fun FrameScreen(state: HomeState, actions: FrameActions) {
     var confirming by remember { mutableStateOf(false) }
+    var renaming by remember { mutableStateOf(false) }
     val frame = state.frame
 
     Scaffold(
@@ -89,6 +93,18 @@ fun FrameScreen(state: HomeState, actions: FrameActions) {
                 return@Column
             }
 
+            // --- name ---
+            Spacer(Modifier.height(8.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text("Name", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(frame.displayName, style = MaterialTheme.typography.titleLarge)
+                }
+                IconButton(onClick = { renaming = true }) {
+                    Icon(Icons.Default.Edit, contentDescription = "Rename the frame")
+                }
+            }
+
             // --- status ---
             Spacer(Modifier.height(8.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -114,6 +130,7 @@ fun FrameScreen(state: HomeState, actions: FrameActions) {
             ActivitySection(state, frame.displayName, actions.onSendNow, actions.onRetry, actions.onRemove)
 
             Section("Connection details")
+            Detail("Name on the frame", frame.name.ifBlank { "—" })
             Detail("Placement", frame.placement.ifBlank { "—" })
             Detail("Address", "${frame.host}:${frame.port}")
             Detail("Resolution", "${frame.width} × ${frame.height}")
@@ -143,6 +160,18 @@ fun FrameScreen(state: HomeState, actions: FrameActions) {
         }
     }
 
+    if (renaming && frame != null) {
+        RenameDialog(
+            current = frame.alias,
+            frameName = frame.name,
+            onSave = {
+                renaming = false
+                actions.onRename(it)
+            },
+            onDismiss = { renaming = false },
+        )
+    }
+
     if (confirming) {
         AlertDialog(
             onDismissRequest = { confirming = false },
@@ -165,6 +194,31 @@ fun FrameScreen(state: HomeState, actions: FrameActions) {
             },
         )
     }
+}
+
+/**
+ * Renames the frame on this phone. The frame's own name is set on the frame, and no known
+ * protocol message changes it, so this is a local label; clearing it goes back to the
+ * frame's name.
+ */
+@Composable
+private fun RenameDialog(current: String, frameName: String, onSave: (String) -> Unit, onDismiss: () -> Unit) {
+    var text by remember { mutableStateOf(current.ifBlank { frameName }) }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Rename frame") },
+        text = {
+            OutlinedTextField(
+                value = text,
+                onValueChange = { text = it.take(60) },
+                singleLine = true,
+                label = { Text("Name") },
+                supportingText = { Text("Only on this phone. Leave empty to use the frame's own name.") },
+            )
+        },
+        confirmButton = { TextButton(onClick = { onSave(if (text.trim() == frameName) "" else text) }) { Text("Save") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+    )
 }
 
 @Composable
