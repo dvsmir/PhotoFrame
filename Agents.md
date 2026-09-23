@@ -74,7 +74,7 @@ implementation this port is based on. It ships **no LICENSE file**, so:
 | 2 — Pairing on a real frame | **done** — gate passed 2026-09-23 on a Pixel 6a (Android 17): mDNS discovery, pairing, real frame details, reconnect after force-stop |
 | 3 — Sending | **done** — gate passed 2026-09-23 on the Pixel 6a, scope narrowed by decision (`05 - Plan.md`, Phase 3 gate outcome): tests 5–10, 12, 13 and 14 pass, test 11 was not run and its expected behaviour is traced in `04 - Testing.md` §8.1, and HEIC and Motion Photo are out of scope for v1. `.\gradlew :app:testDebugUnitTest`: 27 JVM tests. Debug builds can drive the send flow over adb: `DebugPickActivity`, see its KDoc |
 | 4 — Share sheet | **done** — gate passed 2026-09-23: Google Photos → share 20 → FrameAlt → Send → back in Google Photos, 20/20 arrived, with FrameAlt running and again force-stopped (`04 - Testing.md` §8.2). Not yet run on the device: a mixed photo+PDF share (unit-tested) and sharing before pairing |
-| 5 — Gallery + managing | **built, gate mostly passed.** Scope revised 2026-09-23 (D2): the gallery also deletes, hides/shows and displays now. Tests 15 and 17 pass, and the build-time test photos were cleaned up with "Select photos sent from this phone" (`04 - Testing.md` §8.3). Open: 16 (not measured), 18 (deny/timeout), comparing the count with the official app, and 2 `framectl` test photos still on the frame |
+| 5 — Gallery + managing | **built, gate mostly passed.** Scope revised 2026-09-23 (D2): the gallery also deletes, hides/shows and displays now. Tests 15 and 17 pass, and the build-time test photos were cleaned up with "Select photos sent from this phone" (`04 - Testing.md` §8.3). Open: 16 (not measured), 18 (deny/timeout), comparing the count with the official app, and 2 `framectl` test photos still on the frame. **Since then (2026-09-23):** named Photo Frame with a new icon; Home reduced to Add photos, On the frame and a "Frame info" card; a Frame screen with a local rename; a swipeable preview with no Save to phone; and a photos/videos filter. All of it is in the spec (Overview name note, UX §1–§3 and §6, Architecture §5.2, §10 and §11) |
 | 6 | not started |
 
 **Paused 2026-09-23.** Everything not yet run or fixed is listed in `05 - Plan.md`, "Open items". Start there when resuming.
@@ -121,11 +121,11 @@ failure can be pinned on the protocol or on the Android layer rather than guesse
 .\framectl\build\install\framectl\bin\framectl.bat pair <friend-code>
 ```
 
-`./gradlew :protocol:test` — 54 tests, ~5 s, no emulator, no frame.
+`./gradlew :protocol:test`: 60 tests, about 5 s, no emulator, no frame. (54 at the end of Phase 1; 6 added for managing in Phase 5.)
 
 | Suite | Covers |
 |---|---|
 | `NaclVectorTest` | HSalsa20, XSalsa20, secretbox, box, beforenm, X25519, Ed25519 vs. tweetnacl + OpenSSL |
 | `PaceTest` | the 20 reference PACE vectors, friend-code and challenge validation, issuer list |
 | `WireTest` | protobuf subset, ZigZag, envelopes, multipart split/reassembly, malformed input |
-| `SessionTest` | handshake, certificate trust, replay, pairing, upload, gallery, permissions vs. `MockFrame` over loopback TCP |
+| `SessionTest` | handshake, certificate trust, replay, pairing, upload, gallery, permissions, managing (delete, hide/show, display now, batching) vs. `MockFrame` over loopback TCP |

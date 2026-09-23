@@ -165,6 +165,9 @@ is a check or fix that was deliberately left for later. Results so far are in
   photos are visible (it scrolls).
 - **`framectl` prints full peer IDs** in `pair` and `info`, against the rule to show
   only the first 8 hex characters.
+- **Video tiles in the gallery**: whether the frame returns a preview picture for a video
+  (kind 23 with a size) is unobserved. If it does not, those tiles show only the "Video"
+  badge.
 - **2 test photos still on the frame**, sent by `framectl` from the desktop on 2026-09-23
   (a blue "FrameAlt upload test" card and a noisy "multi-chunk test" card). The phone has
   no record of them, so remove them by hand: in the gallery, long-press → Delete.

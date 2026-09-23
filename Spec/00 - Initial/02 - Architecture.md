@@ -10,7 +10,9 @@ Read [`01 - Protocol.md`](01%20-%20Protocol.md) first — this document assumes 
 
 ## 1. Module layout
 
-Two Gradle modules. The split is not ceremony: it is what lets the entire protocol be
+Three Gradle modules: `:protocol`, `:app`, and `:framectl`, a desktop CLI over the same
+library that talks to a real frame without Android in the loop. The protocol split is not
+ceremony: it is what lets the entire protocol be
 tested on a laptop JVM in milliseconds, with no emulator, no device, and no frame.
 
 ```
@@ -27,14 +29,25 @@ FrameAlt/
 │       │   ├── client/     FrameoClient.kt, FrameInfo.kt, MediaItem.kt, FrameError.kt
 │       │   └── net/        SocketFactory.kt  (interface)
 │       └── test/kotlin/…   vectors, codec tests, MockFrame
+├── framectl/                          desktop CLI: discover, probe, pair, info, send, list, …
 └── app/                               Android application
-    └── src/main/kotlin/app/framealt/
-        ├── data/      Room, DataStore, repositories, IdentityStore
-        ├── device/    FrameSession, FrameConnectionManager, NsdDiscovery, WifiSockets
-        ├── media/     ImagePipeline, ExifReader
-        ├── send/      SendQueue, SendWorker, SendNotifications
-        ├── ui/        Compose screens, view models, theme
-        └── FrameAltApp.kt
+    ├── schemas/                       exported Room schemas (1, 2)
+    └── src/
+        ├── main/kotlin/app/framealt/
+        │   ├── data/      FrameStore, IdentityStore, Settings (DataStore);
+        │   │              SendDatabase, QueueItem, SentPhoto (Room)
+        │   ├── device/    FrameConnectionManager, NsdDiscovery, WifiSocketFactory
+        │   ├── media/     ImagePipeline, Sizing
+        │   ├── send/      SendQueue, QueueDrainer, SendWorker, SendNotifications
+        │   ├── gallery/   GalleryRepository, MediaFilter
+        │   ├── diag/      EventLog
+        │   ├── ui/        home (Home, frame card), details (Frame screen), connect,
+        │   │              review (Review & Send), share (ShareActivity), gallery
+        │   │              (grid, swipeable preview), diagnostics, theme
+        │   └── FrameAltApp.kt   the hand-rolled container
+        ├── debug/     DebugPickActivity: drives the send flow over adb (debug builds only)
+        └── test/      JVM tests: QueueDrainer, Sizing and EXIF dates, the Home
+                       summary, share classification
 ```
 
 **Rule:** `protocol/` must not import anything from `android.*` or `androidx.*`. Its
@@ -52,8 +65,10 @@ there and an implementation in `app/` — currently `SocketFactory` and `FrameDi
 | Room | app | pairings + send queue |
 | DataStore (Preferences) | app | identity key blob, settings |
 | WorkManager | app | background send queue + foreground service |
-| Coil | app | thumbnail loading in the picker/review/gallery grids |
-| JUnit 5 + kotlin.test | protocol | JVM tests |
+| Coil | app | thumbnails of *phone* photos on Review & Send. Gallery thumbnails come from the frame (kind 23) and are decoded directly, see §11. |
+| `androidx.exifinterface` | app | EXIF capture date and offset (§6 step 7) |
+| KSP + Room compiler | app | Room code generation; works with AGP 9's built-in Kotlin |
+| JUnit 5 + kotlin.test | protocol, app | JVM tests (`kotlin-test-junit5` on Android, which does not pick the binding itself) |
 | — no DI framework | app | Hand-rolled container. The graph is ~10 objects; Hilt is not worth its build cost here. Revisit if the app grows. |
 
 **BouncyCastle on Android — two rules.** Use only the *lightweight* API
@@ -229,6 +244,18 @@ schema exported to `app/schemas/`). The `frames` table was not built. With one f
 it into Room when multiple frames arrive. `queue_items` also has a `frameErrorCode`
 column, so the UI can map a frame's refusal to the right sentence (UX §7) without parsing
 `lastError`.
+
+**Schema 2 (Phase 5).** `sent_ledger.mediaId` (nullable), added with a Room
+`AutoMigration(1 → 2)`. It records the media ID each photo was sent under, which is what
+the gallery's "Select photos sent from this phone" matches on (§11). Rows written under
+schema 1 have no media ID; `queue_items`, kept 7 days, covers those.
+
+**The paired frame (DataStore, `FrameStore`)** holds the pairing (peer ID, issuer), the
+last endpoint, and what the frame last reported (name, placement, panel size, protocol
+version, permissions, last contact), plus an **alias**. The alias is the user's own name
+for the frame (UX §3), kept only on this phone, because no known protocol message renames
+the frame. `displayName` = alias, else the frame's name, else "Your frame". A new pairing
+clears everything, alias included.
 
 ### 5.3 Settings (DataStore)
 
@@ -448,6 +475,19 @@ personal app: `android:allowBackup="false"`.
 No storage permissions: the photo picker and the share sheet both hand over URIs
 directly.
 
+**As built**, the manifest also has:
+
+- `ui.share.ShareActivity`, exported: `SEND` for `image/*`, and `SEND_MULTIPLE` for
+  `image/*` and `*/*` (a mixed share arrives as `*/*`). See UX §5 and §8.5.
+- WorkManager's `SystemForegroundService`, merged with
+  `foregroundServiceType="dataSync"` (Android 14+ requires the type).
+- `send.CancelSendReceiver`, not exported: the notification's Cancel action.
+- `android:allowBackup="false"` (§8.6).
+- **Debug builds only** (`src/debug/AndroidManifest.xml`): `READ_MEDIA_IMAGES` and the
+  exported `DebugPickActivity`, a stand-in for the photo picker so the send flow can be
+  scripted over adb. The permission is granted by hand with `pm grant`. Release builds
+  contain neither.
+
 ## 9. Security posture
 
 - **Threat model**: a personal app on a trusted phone, talking to a frame on a home
@@ -474,3 +514,39 @@ subnet, frame asleep, permission missing) are otherwise invisible:
 - Frame record: peer ID (redacted), issuer (redacted), host:port, protocol version,
   permissions, last successful contact.
 - "Copy diagnostics" → clipboard, with an explicit note that it contains no keys.
+
+**As built:** the log is `EventLog`, an in-memory ring of 200 events, redacted as it is
+written (peer IDs to 8 hex characters; never keys, friend codes or photo content). The
+screen is reached from the Frame screen's *Diagnostics log* (UX §3). **Debug builds also
+mirror every event to logcat** under the tag `FrameAlt/<area>` (`session`, `discovery`,
+`network`, `queue`, `review`, `share`, `gallery`, `debug`), so a device session can be
+followed with `adb logcat`. Release builds do not.
+
+## 11. Gallery
+
+`GalleryRepository`, one per process, owns what is on the frame: the item list (newest
+first by receive time), a thumbnail cache, the filter, and every manage action. UX §6.
+
+- **Access.** One kind 27 request with type 3 (view + manage, D2), then a poll of the
+  frame's info every 2 s for up to 5 minutes. Each poll is its own short session, so the
+  send queue can run in between.
+- **Thumbnails.** Kind 23 at 400 × 400, requested as tiles appear, newest request first.
+  They are fetched in **one session per batch** rather than one connection each; the
+  session closes when the batch empties, and a fresh one opens if more arrive. They are
+  decoded straight to bitmaps into a 64 MiB `LruCache`, never written to disk. An item
+  with no preview (a video, say) is marked failed and not retried until the next refresh.
+- **Preview.** A horizontal pager over the filtered list. Full-size (kind 23 without a
+  size) is fetched for the photo on screen first, then its neighbours; anything more than
+  two pages away is released and its fetch cancelled. Decoding is capped at 2048 px on
+  the long side. Pages report only once they settle, so a fling fetches only where it
+  lands.
+- **Filter** (`MediaFilter`: all, photos, videos) lives in the repository, so the grid,
+  the preview and "sent from this phone" all see the same set.
+- **Managing.** `FrameSession.delete` / `setVisibility` split IDs into requests of at most
+  1000 and wait for each receipt; `displayNow` is fire and forget (protocol §6). After a
+  failed batch the list is re-read from the frame, because earlier batches may already
+  have applied.
+- **"Select photos sent from this phone"** = the media IDs in `sent_ledger` plus the
+  `SENT` rows in `queue_items` (§5.2), intersected with what is on the frame and shown.
+  It relies on the frame storing each photo under the media ID the client generated,
+  which was confirmed on 2026-09-23: 128 of 133 recorded sends matched.
