@@ -167,6 +167,12 @@ is a check or fix that was deliberately left for later. Results so far are in
   photos are visible (it scrolls).
 - **`framectl` prints full peer IDs** in `pair` and `info`, against the rule to show
   only the first 8 hex characters.
+- **Connect screen showed "No frames found" at once** (Pixel 10, Android 17, release build,
+  first launch, 2026-09-23); *Scan again* then worked. Root cause not confirmed: the phone
+  disconnected before logs were captured. Fixed defensively: discovery retries a refused
+  start up to 3 times, the scan that opens the screen browses once more before reporting
+  nothing, and the screen starts in its scanning state. **Verify on the Pixel 10**, and if
+  it recurs, capture `adb logcat` for `NsdService` at the moment of the tap.
 - **Video tiles in the gallery**: whether the frame returns a preview picture for a video
   (kind 23 with a size) is unobserved. If it does not, those tiles show only the "Video"
   badge.

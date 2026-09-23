@@ -10,6 +10,7 @@ import dev.dsmirnov.photoframe.protocol.FrameDiscovery
 import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -17,6 +18,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import java.net.Inet4Address
 import java.util.concurrent.Executors
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.coroutines.resume
 
 private const val TAG = "discovery"
@@ -45,10 +47,29 @@ class NsdDiscovery(
     private val resolveLock = Mutex()
     private val executor = Executors.newSingleThreadExecutor()
 
-    suspend fun discover(timeoutMillis: Int = DEFAULT_TIMEOUT_MS): List<DiscoveredFrame> =
+    /**
+     * Browses for frames for up to [timeoutMillis].
+     *
+     * A browse that Android refuses to start is retried after a short pause, up to
+     * [START_ATTEMPTS] times. On a freshly started process the first request can be refused,
+     * and a refusal must not read as "no frames on this network" (Plan, "Open items").
+     */
+    suspend fun discover(timeoutMillis: Int = DEFAULT_TIMEOUT_MS): List<DiscoveredFrame> {
+        repeat(START_ATTEMPTS - 1) { attempt ->
+            browse(timeoutMillis)?.let { return it }
+            eventLog.warn(TAG, "retrying discovery (attempt ${attempt + 2} of $START_ATTEMPTS)")
+            delay(START_RETRY_DELAY_MS)
+        }
+        return browse(timeoutMillis).orEmpty()
+    }
+
+    /** One browse. Null when discovery could not be started at all. */
+    private suspend fun browse(timeoutMillis: Int): List<DiscoveredFrame>? =
         withContext(Dispatchers.IO) {
             val found = LinkedHashMap<String, DiscoveredFrame>()
             val discovered = Channel<NsdServiceInfo>(Channel.UNLIMITED)
+            // Set on a platform callback thread, read here after the loop.
+            val startFailed = AtomicBoolean(false)
 
             val listener = object : NsdManager.DiscoveryListener {
                 override fun onDiscoveryStarted(serviceType: String) {
@@ -68,6 +89,7 @@ class NsdDiscovery(
 
                 override fun onStartDiscoveryFailed(serviceType: String, errorCode: Int) {
                     eventLog.error(TAG, "could not start discovery (error $errorCode)")
+                    startFailed.set(true)
                     discovered.close()
                 }
 
@@ -77,11 +99,18 @@ class NsdDiscovery(
             }
 
             try {
-                nsdManager.discoverServices(
-                    FrameDiscovery.SERVICE_TYPE,
-                    NsdManager.PROTOCOL_DNS_SD,
-                    listener,
-                )
+                try {
+                    nsdManager.discoverServices(
+                        FrameDiscovery.SERVICE_TYPE,
+                        NsdManager.PROTOCOL_DNS_SD,
+                        listener,
+                    )
+                } catch (failure: RuntimeException) {
+                    // Refused synchronously (IllegalArgumentException and similar), not via the listener.
+                    eventLog.error(TAG, "could not start discovery (${failure.javaClass.simpleName})")
+                    startFailed.set(true)
+                    discovered.close()
+                }
                 withTimeoutOrNull(timeoutMillis.toLong()) {
                     for (service in discovered) {
                         val frame = resolveLock.withLock { resolve(service) }
@@ -93,8 +122,12 @@ class NsdDiscovery(
                 discovered.close()
             }
 
-            eventLog.info(TAG, "discovery finished: ${found.size} frame(s)")
-            found.values.sortedBy { it.instance }
+            if (startFailed.get()) {
+                null
+            } else {
+                eventLog.info(TAG, "discovery finished: ${found.size} frame(s)")
+                found.values.sortedBy { it.instance }
+            }
         }
 
     private suspend fun resolve(service: NsdServiceInfo): DiscoveredFrame? =
@@ -171,5 +204,7 @@ class NsdDiscovery(
     private companion object {
         const val DEFAULT_TIMEOUT_MS = 5_000
         const val RESOLVE_TIMEOUT_MS = 4_000L
+        const val START_ATTEMPTS = 3
+        const val START_RETRY_DELAY_MS = 500L
     }
 }

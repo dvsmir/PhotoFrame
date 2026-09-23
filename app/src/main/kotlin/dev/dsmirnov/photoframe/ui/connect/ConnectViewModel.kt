@@ -6,6 +6,7 @@ import dev.dsmirnov.photoframe.AppContainer
 import dev.dsmirnov.photoframe.protocol.DiscoveredFrame
 import dev.dsmirnov.photoframe.protocol.FrameEndpoint
 import dev.dsmirnov.photoframe.ui.describeFailure
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -15,7 +16,8 @@ enum class ConnectStep { FIND, MANUAL, CODE }
 
 data class ConnectState(
     val step: ConnectStep = ConnectStep.FIND,
-    val scanning: Boolean = false,
+    /** True from the start: the screen opens by scanning, never by claiming nothing was found. */
+    val scanning: Boolean = true,
     val scanned: Boolean = false,
     val found: List<DiscoveredFrame> = emptyList(),
     val endpoint: FrameEndpoint? = null,
@@ -34,18 +36,34 @@ class ConnectViewModel(private val container: AppContainer) : ViewModel() {
     private val _state = MutableStateFlow(ConnectState())
     val state: StateFlow<ConnectState> = _state.asStateFlow()
 
+    private var scanJob: Job? = null
+
     init {
         viewModelScope.launch {
             _state.value = _state.value.copy(senderName = container.settings.currentSenderName())
         }
-        scan()
+        startScan(secondChance = true)
     }
 
-    fun scan() {
-        if (_state.value.scanning) return
-        viewModelScope.launch {
-            _state.value = _state.value.copy(scanning = true, error = null)
-            val found = runCatching { container.discovery.discover() }.getOrDefault(emptyList())
+    /** "Scan again": one browse, and whatever it finds is the answer. */
+    fun scan() = startScan(secondChance = false)
+
+    /**
+     * @param secondChance for the scan that runs when the screen opens: if it finds nothing,
+     *   browse once more before saying so. Opening this screen should mean "looking", and a
+     *   first browse on a freshly started app can come back empty for reasons that a second
+     *   one does not share. Reported on a Pixel 10, 2026-09-23.
+     */
+    private fun startScan(secondChance: Boolean) {
+        // Guard on the job, not on `scanning`: the state starts out scanning.
+        if (scanJob?.isActive == true) return
+        _state.value = _state.value.copy(scanning = true, error = null)
+        scanJob = viewModelScope.launch {
+            var found = runCatching { container.discovery.discover() }.getOrDefault(emptyList())
+            if (found.isEmpty() && secondChance) {
+                container.eventLog.info("discovery", "nothing on the first browse; trying once more")
+                found = runCatching { container.discovery.discover() }.getOrDefault(emptyList())
+            }
             _state.value = _state.value.copy(
                 scanning = false,
                 scanned = true,
