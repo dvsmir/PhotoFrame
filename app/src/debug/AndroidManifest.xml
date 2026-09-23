@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Debug builds only. A test hook for driving the send flow over adb, since the system photo
+  picker is not something a script can tap through reliably. Release builds never contain it.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Needed only by the hook to list a test folder. Grant it with `adb shell pm grant`. -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+
+    <application>
+        <activity
+            android:name="app.framealt.debug.DebugPickActivity"
+            android:exported="true"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+    </application>
+
+</manifest>

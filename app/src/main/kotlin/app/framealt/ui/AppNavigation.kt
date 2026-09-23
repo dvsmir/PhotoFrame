@@ -39,8 +39,14 @@ object Routes {
 }
 
 @Composable
-fun AppNavigation(container: AppContainer, modifier: Modifier = Modifier) {
+fun AppNavigation(container: AppContainer, reviewRequest: Int = 0, modifier: Modifier = Modifier) {
     val navController: NavHostController = rememberNavController()
+
+    LaunchedEffect(reviewRequest) {
+        if (reviewRequest > 0 && container.pendingPicks.isNotEmpty()) {
+            navController.navigate(Routes.REVIEW) { launchSingleTop = true }
+        }
+    }
 
     NavHost(navController = navController, startDestination = Routes.HOME, modifier = modifier) {
         composable(Routes.HOME) {

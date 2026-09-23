@@ -73,6 +73,22 @@ class HomeViewModel(private val container: AppContainer) : ViewModel() {
                 _state.value = _state.value.copy(senderName = name)
             }
         }
+        // Wi-Fi coming and going changes what Home may claim: "Ready" with the phone on mobile
+        // data would be a lie, and so would "waiting to go" when it is waiting for Wi-Fi.
+        viewModelScope.launch {
+            container.socketFactory.wifiAvailable.collect { onWifi ->
+                val current = _state.value
+                if (current.frame == null) return@collect
+                _state.value = when {
+                    !onWifi -> current.copy(
+                        status = FrameStatus.NO_WIFI,
+                        message = "You're not on Wi-Fi. FrameAlt sends photos over your home network.",
+                    )
+                    current.status == FrameStatus.NO_WIFI -> current.copy(status = FrameStatus.READY, message = null)
+                    else -> current
+                }
+            }
+        }
         viewModelScope.launch {
             combine(container.sendQueue.items, container.sendQueue.live, ::summarise).collect { activity ->
                 _state.value = _state.value.copy(activity = activity)
