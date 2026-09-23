@@ -226,6 +226,28 @@ version.
     Periodically prune them on the frame.
 22. Do not fill the frame's storage during testing — error 12 means real cleanup work.
 
+### 8.1 Results — Phase 3 sending, 2026-09-23
+
+Pixel 6a on Android 17, frame on protocol 18, same Wi-Fi. Driven over adb with the debug
+build's `DebugPickActivity`. It stands in for the system photo picker, so everything
+from Review & Send onwards is the real path. The test photos are labelled 4000 × 3000
+JPEGs of about 1 MB each, which prepare to WebPs of a few hundred KB. "Arrived" means
+the frame's kind 6 receipt came back for every photo. Whether each is *displayed*
+correctly needs a look at the frame, and is marked as such.
+
+| # | Result | Notes |
+|---|---|---|
+| 5 | ✅ | 4 photos sent through the real picker by hand; the owner confirmed they appeared. |
+| 6 | ✅ | 50/50 arrived. 50 prepared in 10 s; the upload took 35.6 s (~0.7 s per photo) in one session. No thermal effect noticed. |
+| 7 | ✅ | Screen locked 4 s into test 6's batch; the drain finished while locked, as a `dataSync` foreground service. |
+| 8 | ✅ | Wi-Fi off after 3 sent: the photo in flight got `SocketException`, went back to `PREPARED` and was charged 1 attempt. Wi-Fi back on → the queue restarted within 0.5 s and sent the remaining 9. **Bug found and fixed:** Home kept saying "Ready" and "waiting to go … Send now" with Wi-Fi off; it now follows Wi-Fi. Duplicates on the frame: not yet checked by eye. |
+| 9 | ✅ with a caveat | Force-stopped after 4 sent. The process restarted by itself about 2 s later (cause not identified) and sent the remaining 8 in the background, with no foreground service (`ForegroundServiceStartNotAllowedException`, handled). So "remaining photos complete" holds, but "resumes on reopen" was not exercised on its own. |
+| 10 | ✅ | Airplane mode on for 3 min 27 s after 3 sent; shortened from 10 min by agreement. Home showed "No Wi-Fi" and "9 photos waiting for Wi-Fi at home." Wi-Fi reconnected 3 s after airplane mode ended, and the queue sent the remaining 9. |
+| 11 | ⏳ | Needs the frame physically unplugged. |
+| 12 | ✅ sent, ⏳ look | Crop card (yellow border, LEFT/RIGHT EDGE labels) sent with *Show the whole photo* off; the frame should cut the edges. Check on the frame. |
+| 13 | partly | Portrait 3000 × 4000 and a 12000 × 2000 panorama both prepared and arrived. Earlier: a JPEG with EXIF orientation 6 and a transparent PNG. HEIC and a Motion Photo not yet tried; that needs real camera photos. Orientation and panorama fit need a look at the frame. |
+| 14 | ✅ badge | Reopening a folder already sent shows "Already sent" on those tiles and "2 of these were sent before." The pipeline is deterministic: the same source gives the same content ID. What the frame does on a re-send is still §6 question 1. |
+
 ## 9. CI
 
 GitHub Actions on push:
