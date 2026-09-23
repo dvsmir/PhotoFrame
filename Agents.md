@@ -74,7 +74,8 @@ implementation this port is based on. It ships **no LICENSE file**, so:
 | 2 — Pairing on a real frame | **done** — gate passed 2026-09-23 on a Pixel 6a (Android 17): mDNS discovery, pairing, real frame details, reconnect after force-stop |
 | 3 — Sending | **done** — gate passed 2026-09-23 on the Pixel 6a, scope narrowed by decision (`05 - Plan.md`, Phase 3 gate outcome): tests 5–10, 12, 13 and 14 pass, test 11 was not run and its expected behaviour is traced in `04 - Testing.md` §8.1, and HEIC and Motion Photo are out of scope for v1. `.\gradlew :app:testDebugUnitTest`: 27 JVM tests. Debug builds can drive the send flow over adb: `DebugPickActivity`, see its KDoc |
 | 4 — Share sheet | **done** — gate passed 2026-09-23: Google Photos → share 20 → FrameAlt → Send → back in Google Photos, 20/20 arrived, with FrameAlt running and again force-stopped (`04 - Testing.md` §8.2). Not yet run on the device: a mixed photo+PDF share (unit-tested) and sharing before pairing |
-| 5–6 | not started |
+| 5 — Gallery + managing | **built, gate mostly passed.** Scope revised 2026-09-23 (D2): the gallery also deletes, hides/shows and displays now. Tests 15 and 17 pass, and the build-time test photos were cleaned up with "Select photos sent from this phone" (`04 - Testing.md` §8.3). Open: 16 (not measured), 18 (deny/timeout), comparing the count with the official app, and 2 `framectl` test photos still on the frame |
+| 6 | not started |
 
 ### Phase 2 — how it was verified
 

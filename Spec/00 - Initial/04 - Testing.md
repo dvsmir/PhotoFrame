@@ -263,6 +263,24 @@ first, so only the share's own grant could make the photos readable.
 Not yet run on the device: a mixed share (photos plus a PDF; the classification is
 unit-tested in `SharedItemsTest`), and sharing before any frame is paired.
 
+### 8.3 Results — Phase 5 gallery, 2026-09-23
+
+Pixel 6a, Android 17, frame on protocol 18.
+
+| # | Result | Notes |
+|---|---|---|
+| 15 | ✅ | Request access (view + manage, kind 27 type 3) → the owner tapped Allow on the frame → granted about 12 s later, and the gallery listed 1458 items. |
+| 16 | not measured | The grid scrolls through a 1330-item library, and thumbnails load as tiles appear. Smoothness and memory were not measured. |
+| 17 | ✅ | Preview: full-size fetch, capture date ("Taken 17 Sep 2015", from the EXIF date the pipeline sent) and received date. *Save to phone* wrote the frame's copy to `Pictures/FrameAlt` (20.7 KB WebP). Hide, Show and *Show on frame now* all completed. Display now has no receipt, so whether it showed needs a look at the frame. |
+| 18 | not run | Deny or ignore the access request. |
+| count | ⏳ | The app lists 1330 items (1328 photos, 2 videos) after cleanup; still to compare with the official Frameo app. |
+| cleanup | ✅ | "Select photos sent from this phone" matched 128 of the 133 sends the phone recorded. The other 5 were no longer on the frame; the selection cannot include anything the phone did not record. Delete removed the 128 in about 1 s; a re-list from the frame dropped from 1458 to 1330, exactly 128. **Left behind:** the 2 photos `framectl` sent from the desktop, which the phone has no record of. |
+
+Also confirmed from the frame's own thumbnails: a transparent PNG arrives flattened onto
+white, and a JPEG with EXIF orientation 6 arrives upright. The frame stores and lists items
+under the media ID the client generated, which is what the "sent from this phone" selection
+relies on.
+
 ## 9. CI
 
 GitHub Actions on push:
