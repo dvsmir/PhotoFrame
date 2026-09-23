@@ -24,7 +24,8 @@ import androidx.navigation.navArgument
 import app.framealt.AppContainer
 import app.framealt.ui.connect.ConnectScreen
 import app.framealt.ui.connect.ConnectViewModel
-import app.framealt.ui.details.ConnectionDetailsScreen
+import app.framealt.ui.details.FrameActions
+import app.framealt.ui.details.FrameScreen
 import app.framealt.ui.diagnostics.DiagnosticsScreen
 import app.framealt.ui.gallery.GalleryActions
 import app.framealt.ui.gallery.GalleryScreen
@@ -76,14 +77,9 @@ fun AppNavigation(container: AppContainer, reviewRequest: Int = 0, modifier: Mod
                 state = state,
                 actions = HomeActions(
                     onConnectFrame = { navController.navigate(Routes.CONNECT) },
-                    onOpenDetails = { navController.navigate(Routes.DETAILS) },
-                    onOpenDiagnostics = { navController.navigate(Routes.DIAGNOSTICS) },
-                    onRefresh = model::refresh,
                     onAddPhotos = { picker.launch(PickVisualMediaRequest(PickVisualMedia.ImageOnly)) },
-                    onSendNow = model::sendNow,
-                    onRetry = model::retry,
-                    onRemove = model::remove,
                     onOpenGallery = { navController.navigate(Routes.GALLERY) },
+                    onOpenFrame = { navController.navigate(Routes.DETAILS) },
                 ),
             )
         }
@@ -185,13 +181,20 @@ fun AppNavigation(container: AppContainer, reviewRequest: Int = 0, modifier: Mod
         composable(Routes.DETAILS) {
             val model: HomeViewModel = viewModel { HomeViewModel(container) }
             val state by model.state.collectAsState()
-            ConnectionDetailsScreen(
+            FrameScreen(
                 state = state,
-                onBack = { navController.popBackStack() },
-                onForget = {
-                    model.forget()
-                    navController.popBackStack(Routes.HOME, inclusive = false)
-                },
+                actions = FrameActions(
+                    onBack = { navController.popBackStack() },
+                    onRefresh = model::refresh,
+                    onSendNow = model::sendNow,
+                    onRetry = model::retry,
+                    onRemove = model::remove,
+                    onOpenDiagnostics = { navController.navigate(Routes.DIAGNOSTICS) },
+                    onForget = {
+                        model.forget()
+                        navController.popBackStack(Routes.HOME, inclusive = false)
+                    },
+                ),
             )
         }
 

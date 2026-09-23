@@ -25,6 +25,8 @@ enum class FrameStatus { UNKNOWN, CHECKING, READY, OFFLINE, NO_WIFI }
 
 data class HomeState(
     val frame: StoredFrame? = null,
+    /** False until the stored pairing has been read, so Home does not flash the unpaired screen. */
+    val loaded: Boolean = false,
     val status: FrameStatus = FrameStatus.UNKNOWN,
     val message: String? = null,
     val senderName: String = "",
@@ -60,6 +62,7 @@ class HomeViewModel(private val container: AppContainer) : ViewModel() {
             container.frameStore.frame.collect { frame ->
                 _state.value = _state.value.copy(
                     frame = frame,
+                    loaded = true,
                     status = when {
                         frame == null -> FrameStatus.UNKNOWN
                         !container.socketFactory.isOnWifi -> FrameStatus.NO_WIFI

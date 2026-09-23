@@ -7,11 +7,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -27,36 +30,52 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import app.framealt.data.QueueItem
+import app.framealt.ui.home.ActivitySection
+import app.framealt.ui.home.FrameStatus
 import app.framealt.ui.home.HomeState
+import app.framealt.ui.home.StatusChip
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
+/** Everything the Frame screen can ask for. */
+class FrameActions(
+    val onBack: () -> Unit,
+    val onRefresh: () -> Unit,
+    val onSendNow: () -> Unit,
+    val onRetry: (QueueItem) -> Unit,
+    val onRemove: (QueueItem) -> Unit,
+    val onOpenDiagnostics: () -> Unit,
+    val onForget: () -> Unit,
+)
+
+/**
+ * Everything about the frame that is not needed every time: status and its reason, send
+ * activity, connection details, the diagnostics log, and removing the frame. `UX.md` §3.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ConnectionDetailsScreen(
-    state: HomeState,
-    onBack: () -> Unit,
-    onForget: () -> Unit,
-) {
+fun FrameScreen(state: HomeState, actions: FrameActions) {
     var confirming by remember { mutableStateOf(false) }
+    val frame = state.frame
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Connection details") },
+                title = { Text(frame?.displayName ?: "Frame") },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    IconButton(onClick = actions.onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
             )
         },
     ) { padding ->
-        val frame = state.frame
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -70,39 +89,53 @@ fun ConnectionDetailsScreen(
                 return@Column
             }
 
+            // --- status ---
             Spacer(Modifier.height(8.dp))
-            Detail("Name", frame.displayName)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("Status", style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+                StatusChip(state.status)
+            }
+            if (state.message != null) {
+                Spacer(Modifier.height(8.dp))
+                Text(state.message, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.error)
+            }
+            Spacer(Modifier.height(8.dp))
+            OutlinedButton(
+                onClick = actions.onRefresh,
+                enabled = state.status != FrameStatus.CHECKING,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Icon(Icons.Default.Refresh, contentDescription = null)
+                Spacer(Modifier.size(8.dp))
+                Text("Check the connection")
+            }
+
+            Section("Activity")
+            ActivitySection(state, frame.displayName, actions.onSendNow, actions.onRetry, actions.onRemove)
+
+            Section("Connection details")
             Detail("Placement", frame.placement.ifBlank { "—" })
             Detail("Address", "${frame.host}:${frame.port}")
             Detail("Resolution", "${frame.width} × ${frame.height}")
             Detail("Protocol version", frame.protocolVersion.takeIf { it > 0 }?.toString() ?: "—")
             Detail("Last contact", formatTime(frame.lastSeenAtMillis))
-
-            Spacer(Modifier.height(16.dp))
-            HorizontalDivider()
-            Spacer(Modifier.height(16.dp))
-
-            Text("Permissions", style = MaterialTheme.typography.titleMedium)
-            Spacer(Modifier.height(8.dp))
             Detail("View photos", if (frame.canView) "Granted" else "Not granted")
             Detail("Manage photos", if (frame.canManage) "Granted" else "Not granted")
-
-            Spacer(Modifier.height(16.dp))
-            HorizontalDivider()
-            Spacer(Modifier.height(16.dp))
-
-            Text("Identity", style = MaterialTheme.typography.titleMedium)
-            Spacer(Modifier.height(8.dp))
             // Truncated on purpose: the full key adds nothing on screen and turns any
             // screenshot into a disclosure.
             Detail("Frame ID", frame.peerId.take(16) + "…")
             Detail("Certificate issuer", frame.issuer.take(16) + "…")
             Detail("Your name on the frame", state.senderName)
 
-            Spacer(Modifier.height(32.dp))
+            Section("Troubleshooting")
+            OutlinedButton(onClick = actions.onOpenDiagnostics, modifier = Modifier.fillMaxWidth()) {
+                Text("Diagnostics log")
+            }
+            Spacer(Modifier.height(8.dp))
             OutlinedButton(
                 onClick = { confirming = true },
                 modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error),
             ) {
                 Text("Remove this frame")
             }
@@ -124,7 +157,7 @@ fun ConnectionDetailsScreen(
             confirmButton = {
                 TextButton(onClick = {
                     confirming = false
-                    onForget()
+                    actions.onForget()
                 }) { Text("Remove") }
             },
             dismissButton = {
@@ -132,6 +165,15 @@ fun ConnectionDetailsScreen(
             },
         )
     }
+}
+
+@Composable
+private fun Section(title: String) {
+    Spacer(Modifier.height(20.dp))
+    HorizontalDivider()
+    Spacer(Modifier.height(16.dp))
+    Text(title, style = MaterialTheme.typography.titleMedium)
+    Spacer(Modifier.height(8.dp))
 }
 
 @Composable
